@@ -8,10 +8,7 @@ public class SingleItemStackHandler extends ItemStackHandler {
 
 
     public SingleItemStackHandler() {
-    }
-
-    public SingleItemStackHandler(int size) {
-        super(size);
+        super(1);
     }
 
     public SingleItemStackHandler(NonNullList<ItemStack> stacks) {

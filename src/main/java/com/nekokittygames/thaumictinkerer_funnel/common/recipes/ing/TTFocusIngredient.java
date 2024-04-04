@@ -1,13 +1,13 @@
 package com.nekokittygames.thaumictinkerer_funnel.common.recipes.ing;
 
+import java.util.Objects;
+
+import javax.annotation.Nullable;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import thaumcraft.api.casters.FocusEffect;
-import thaumcraft.api.items.ItemsTC;
 import thaumcraft.common.items.casters.ItemFocus;
-
-import javax.annotation.Nullable;
-import java.util.Objects;
 
 public class TTFocusIngredient extends Ingredient {
     private Class<? extends FocusEffect> effect;

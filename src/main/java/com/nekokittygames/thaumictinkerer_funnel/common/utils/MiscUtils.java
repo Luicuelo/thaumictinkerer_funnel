@@ -12,7 +12,7 @@ public class MiscUtils {
      * @param <T> The field's type.
      * @return null
      */
-    @SuppressWarnings({"ConstantConditions", "SameReturnValue"})
+   
     public static <T> T nullz() {
         return null;
     }

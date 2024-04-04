@@ -5,54 +5,25 @@
 package com.nekokittygames.thaumictinkerer_funnel.client.rendering.tileentities;
 
 import javax.annotation.Nullable;
-import org.lwjgl.opengl.GL11;
-
-
 import com.nekokittygames.thaumictinkerer_funnel.common.blocks.BlockFunnel;
 import com.nekokittygames.thaumictinkerer_funnel.common.blocks.ModBlocks;
-import com.nekokittygames.thaumictinkerer_funnel.common.libs.LibMisc;
 import com.nekokittygames.thaumictinkerer_funnel.common.tileentity.TileEntityFunnel;
-//import com.nekokittygames.thaumictinkerer_funnel.common.tileentity.TileEntityFunnel.BakedModelCache;
-import com.nekokittygames.thaumictinkerer_funnel.common.tileentity.TileEntityFunnel.JarAspect;
-
 import net.minecraft.block.Block;
-import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BlockModelRenderer;
-import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.RenderItem;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.client.model.IModel;
-import net.minecraftforge.client.model.ModelLoaderRegistry;
-import net.minecraftforge.common.model.TRSRTransformation;
-import thaumcraft.api.aspects.Aspect;
 import thaumcraft.api.aspects.IEssentiaContainerItem;
-import thaumcraft.api.blocks.BlocksTC;
-import thaumcraft.client.lib.RenderCubes;
-import thaumcraft.common.tiles.essentia.TileJarFillable;
-import java.util.HashMap;
-import java.util.Map;
-import java.awt.Color;
 
 
 public class TileEntityFunnelRenderer extends TileEntitySpecialRenderer<TileEntityFunnel> {
 
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void render(@Nullable TileEntityFunnel te, double x, double y, double z, float pticks, int digProgress, float unused) {
 
@@ -74,7 +45,6 @@ public class TileEntityFunnelRenderer extends TileEntitySpecialRenderer<TileEnti
         
 		boolean hasJar=false;
 		ItemStack jar=null;
-
 		
 		if(blockState.getProperties().containsKey(BlockFunnel.JAR))
 		    		hasJar= blockState.getValue(BlockFunnel.JAR).booleanValue();

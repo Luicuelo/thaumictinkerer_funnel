@@ -2,8 +2,6 @@ package com.nekokittygames.thaumictinkerer_funnel.common.blocks;
 
 import java.util.ArrayList;
 
-import com.nekokittygames.thaumictinkerer_funnel.thaumictinkerer_funnel;
-
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
@@ -11,8 +9,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.registries.IForgeRegistry;
 
@@ -39,7 +35,8 @@ public  class RegistrationHandler {
 		}
     }
 
-    public  void registerItems(final RegistryEvent.Register<Item> event) {
+    @SuppressWarnings("deprecation")
+	public  void registerItems(final RegistryEvent.Register<Item> event) {
 
         IForgeRegistry<Item> registry = event.getRegistry();
 
@@ -63,7 +60,7 @@ public  class RegistrationHandler {
 		for(int i = 0; i < blocks.size(); i++) {
 			Block block =(Block) (blocks.get(i));
 			if (block instanceof TTTileEntity) {
-				Class<? extends TileEntity> classTileEntity=((TTTileEntity)block).getClassTileEntity();
+				Class<? extends TileEntity> classTileEntity=((TTTileEntity<?>)block).getClassTileEntity();
 				GameRegistry.registerTileEntity(classTileEntity, block.getRegistryName().toString());
 			}
 				

@@ -4,7 +4,6 @@ import com.nekokittygames.thaumictinkerer_funnel.thaumictinkerer_funnel;
 import com.nekokittygames.thaumictinkerer_funnel.common.libs.LibBlockNames;
 import com.nekokittygames.thaumictinkerer_funnel.common.libs.LibMisc;
 import com.nekokittygames.thaumictinkerer_funnel.common.tileentity.TileEntityFunnel;
-import com.nekokittygames.thaumictinkerer_funnel.common.tileentity.TileEntityFunnel.JarAspect;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;

@@ -4,10 +4,12 @@
 
 package com.nekokittygames.thaumictinkerer_funnel.proxy;
 
-import com.nekokittygames.thaumictinkerer_funnel.client.misc.Shaders;
-import com.nekokittygames.thaumictinkerer_funnel.client.rendering.tileentities.*;
+import static com.nekokittygames.thaumictinkerer_funnel.thaumictinkerer_funnel.instance;
+
+import com.nekokittygames.thaumictinkerer_funnel.thaumictinkerer_funnel;
+import com.nekokittygames.thaumictinkerer_funnel.client.rendering.tileentities.TileEntityFunnelRenderer;
 import com.nekokittygames.thaumictinkerer_funnel.common.commands.CommandThaumicTinkererClient;
-import com.nekokittygames.thaumictinkerer_funnel.common.tileentity.*;
+import com.nekokittygames.thaumictinkerer_funnel.common.tileentity.TileEntityFunnel;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraftforge.client.ClientCommandHandler;
@@ -21,11 +23,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import thaumcraft.common.blocks.misc.BlockNitor;
-
-import static com.nekokittygames.thaumictinkerer_funnel.thaumictinkerer_funnel.instance;
-
-import com.nekokittygames.thaumictinkerer_funnel.thaumictinkerer_funnel;
 
 /**
  * Client side proxy

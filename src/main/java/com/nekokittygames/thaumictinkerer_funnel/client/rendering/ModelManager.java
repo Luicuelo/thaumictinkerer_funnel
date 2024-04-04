@@ -4,12 +4,20 @@
 
 package com.nekokittygames.thaumictinkerer_funnel.client.rendering;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+import javax.annotation.Nonnull;
+
 import com.nekokittygames.thaumictinkerer_funnel.thaumictinkerer_funnel;
-import com.nekokittygames.thaumictinkerer_funnel.common.blocks.ModBlocks;
 import com.nekokittygames.thaumictinkerer_funnel.common.helper.IItemVariants;
-import com.nekokittygames.thaumictinkerer_funnel.common.items.ModItems;
 import com.nekokittygames.thaumictinkerer_funnel.common.libs.LibMisc;
 import com.nekokittygames.thaumictinkerer_funnel.common.utils.IVariant;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -20,17 +28,9 @@ import net.minecraft.client.renderer.block.statemap.StateMapperBase;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.client.model.obj.OBJLoader;
-import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
-
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.util.*;
 
 /**
  * Model manager helper class for loading models
@@ -61,11 +61,7 @@ public class ModelManager {
 
     }
 
-    /**
-     * Gets the ModelManager instance
-     *
-     * @return the current instance
-     */
+
     public static ModelManager getInstance() {
         return INSTANCE;
     }

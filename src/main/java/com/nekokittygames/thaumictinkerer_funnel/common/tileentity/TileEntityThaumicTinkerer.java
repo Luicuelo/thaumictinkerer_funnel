@@ -1,11 +1,11 @@
 package com.nekokittygames.thaumictinkerer_funnel.common.tileentity;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
-
-import javax.annotation.Nullable;
 
 public abstract class TileEntityThaumicTinkerer extends TileEntity {
 

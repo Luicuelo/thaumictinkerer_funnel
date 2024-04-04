@@ -1,11 +1,11 @@
 package com.nekokittygames.thaumictinkerer_funnel.common.misc;
 
+import javax.annotation.Nonnull;
+
 import com.nekokittygames.thaumictinkerer_funnel.common.blocks.ModBlocks;
+
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.ItemStack;
-
-import javax.annotation.Nonnull;
-import java.util.Objects;
 
 
 public class ThaumicTInkererCreativeTab extends CreativeTabs {
