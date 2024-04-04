@@ -1,0 +1,13 @@
+{
+  "forge_marker": 1,
+  "defaults": {"model": "thaumictinkerer_funnel:funnel"},
+  "variants": {
+  	"normal": [{}],
+    "jar=false": [{}],
+    "jar=true":  [{}],
+    "inventory": {
+      "model": "thaumictinkerer_funnel:funnel",
+      "transform": "forge:default-block"
+    }
+  }
+}
