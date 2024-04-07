@@ -53,8 +53,8 @@ public class CommandThaumicTinkererClient extends CommandBase {
         } else {
             if (args[0].equalsIgnoreCase("listunknownenchants")) {
                 for (Enchantment enchantment : Enchantment.REGISTRY) {
-                    if (ArrayUtils.contains(TTConfig.blacklistedEnchants, Enchantment.REGISTRY.getIDForObject(enchantment)))
-                        continue;
+                    //if (ArrayUtils.contains(TTConfig.blacklistedEnchants, Enchantment.REGISTRY.getIDForObject(enchantment)))
+                   //     continue;
                     ResourceLocation object = Enchantment.REGISTRY.getNameForObject(enchantment);
                     ResourceLocation iconLoc = new ResourceLocation(object.getResourceDomain(), "textures/enchant_icons/" + object.getResourcePath() + ".png");
 

@@ -27,11 +27,14 @@ import net.minecraftforge.items.ItemStackHandler;
 import thaumcraft.api.aspects.Aspect;
 import thaumcraft.api.aspects.AspectList;
 import thaumcraft.api.aspects.IAspectContainer;
+import thaumcraft.api.aspects.IAspectSource;
 import thaumcraft.api.aspects.IEssentiaContainerItem;
+import thaumcraft.api.aspects.IEssentiaTransport;
 import thaumcraft.common.tiles.essentia.TileJarFillable;
+import com.nekokittygames.thaumictinkerer_funnel.common.config.TTConfig;
 
 public class TileEntityFunnel extends TileEntityThaumicTinkerer
-		implements IAspectContainer, ITickable, ITileJarFillable {
+		implements IAspectContainer, ITickable, ITileJarFillable,IAspectSource,IEssentiaTransport {
 
 	private static class ItemCapacityDictionary {
 		private static final Map<String, Integer> ITEM_CAPACITY_MAP = new HashMap<>();
@@ -118,36 +121,13 @@ public class TileEntityFunnel extends TileEntityThaumicTinkerer
 
 	public TileEntityFunnel() {
 		super();
+		if (TTConfig.funnelSpeed>0 && TTConfig.funnelSpeed<100) {
+			speed=TTConfig.funnelSpeed;
+		}
 	}
 
 	public boolean isTitleTick() {
 		return((ticksElapsed%TITLE_TICK==1));
-	}
-	
-	@Override
-	public int addToContainer(Aspect aspect, int quantity) {
-		JarAspect jarAspect=getJarAspect();
-		ItemStack jar=inventory.getStackInSlot(0);
-		
-		if (jarAspect!=null) {
-			int capacity=jarAspect.getCapacity();
-			int amount=jarAspect.getAmount();
-			IEssentiaContainerItem jarItem=jarAspect.getItem();
-			
-			int canFill =capacity-amount;
-			int quantityToAdd=quantity;
-			if (quantityToAdd>canFill) quantityToAdd=canFill;
-			AspectList aspectList = jarItem.getAspects(jar);
-			if(aspectList==null) aspectList=new AspectList();
-			aspectList.add(aspect, quantityToAdd);			
-			jarItem.setAspects(jar, aspectList);
-	
-			inventory.onContentsChanged(0);
-			return quantity-quantityToAdd;//remains not added
-			
-		}
-		
-		return 0;
 	}
 	
 	public int comparatorSignal() {
@@ -190,8 +170,8 @@ public class TileEntityFunnel extends TileEntityThaumicTinkerer
 
 		String jarName = jar.getItem().getRegistryName().toString();
 		int capacity = 0;
-
-		if (ItemCapacityDictionary.getCapacity(jarName) != null) {
+		Integer cachedCapacity=ItemCapacityDictionary.getCapacity(jarName);
+		if (cachedCapacity != null) {
 			capacity = ItemCapacityDictionary.getCapacity(jarName);
 			// System.out.println(" Jar:"+jarName+" found, capacity:"+capacity);
 		}
@@ -379,6 +359,9 @@ public class TileEntityFunnel extends TileEntityThaumicTinkerer
 		if (world.isRemote)
 			return;
 
+		ticksElapsed++;
+		tryToGetEssence(1);
+		
 		if (isTitleTick()) {
 
 			ItemStack sourceJar = inventory.getStackInSlot(0);
@@ -390,7 +373,7 @@ public class TileEntityFunnel extends TileEntityThaumicTinkerer
 			IEssentiaContainerItem jarItem = jarAspect.getItem();
 			AspectList aspectList = jarItem.getAspects(sourceJar);
 			if (aspectList.size() == 0) return;
-			
+
 			int sourceAmmount=jarAspect.getAmount();
 			int ammountToTransfer=Math.min(sourceAmmount, speed);
 			//cant transfer more ammount that is in origin Jar.
@@ -409,7 +392,7 @@ public class TileEntityFunnel extends TileEntityThaumicTinkerer
 							AspectList aspectListDestiny = jar.getAspects();
 							if (aspectListDestiny != null && (aspectListDestiny.size() == 0 || // is empty
 									aspectListDestiny.size() == 1 && aspectListDestiny.getAspects() != null
-											&& aspectListDestiny.getAspects()[0] == aspect)) {
+									&& aspectListDestiny.getAspects()[0] == aspect)) {
 								remain = jar.addToContainer(aspect, ammountToTransfer);
 								added = true;
 							}
@@ -419,7 +402,7 @@ public class TileEntityFunnel extends TileEntityThaumicTinkerer
 							AspectList aspectListDestiny = jar.getAspects();
 							if (aspectListDestiny != null && (aspectListDestiny.size() == 0 || // is empty
 									aspectListDestiny.size() == 1 && aspectListDestiny.getAspects() != null
-											&& aspectListDestiny.getAspects()[0] == aspect)) {
+									&& aspectListDestiny.getAspects()[0] == aspect)) {
 								remain = jar.addToContainer(aspect, ammountToTransfer);
 								added = true;
 							}
@@ -435,11 +418,48 @@ public class TileEntityFunnel extends TileEntityThaumicTinkerer
 					}
 				}
 			}
-		}
 
-		ticksElapsed++;
+		}
 	}
 
+	
+	private void tryToGetEssence(int amtAsked) {
+
+		ItemStack sourceJar = inventory.getStackInSlot(0);
+		if (sourceJar == null) return;
+		JarAspect jarAspect = this.getJarAspect();
+		if (jarAspect == null) return;
+		Aspect aspect=jarAspect.getAspect();
+		//if (aspect == null) is empty Jar
+
+		int capacity=jarAspect.getCapacity();
+		int ammount =jarAspect.getAmount();
+		int mySuction= Math.max(32,(capacity-ammount));
+
+		for(EnumFacing dir : EnumFacing.HORIZONTALS) {
+			EnumFacing dirFrom=dir.getOpposite();
+
+			TileEntity tile = world.getTileEntity(pos.offset(dir));
+			if (tile instanceof TileEntityFunnel)continue;//is another funnel
+				
+			if (tile != null && tile instanceof IEssentiaTransport) {
+				IEssentiaTransport essentiaTransport=(IEssentiaTransport)tile;
+				if (essentiaTransport.canOutputTo(dirFrom)) {
+					Aspect aspectFrom=essentiaTransport.getEssentiaType(dirFrom);
+					if(((aspect == null) ||aspectFrom==aspect) && 
+							essentiaTransport.getSuctionAmount(dirFrom)<=mySuction && essentiaTransport.getMinimumSuction()<=mySuction)
+					{
+						int ammountCanAsk=Math.min(amtAsked, (capacity-ammount));						
+						int taken=essentiaTransport.takeEssentia(aspectFrom, ammountCanAsk, dirFrom);
+						if (taken>0) {
+							addToContainer(aspectFrom, taken);
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	@Override
 	public AspectList getAspects() {
 		
@@ -462,34 +482,194 @@ public class TileEntityFunnel extends TileEntityThaumicTinkerer
 		// Empty
 	}
 
+	
+	@Override
+	public int addToContainer(Aspect aspect, int quantity) {
+		JarAspect jarAspect=getJarAspect();
+		ItemStack jar=inventory.getStackInSlot(0);
+		
+		if (jarAspect!=null) {
+			int capacity=jarAspect.getCapacity();
+			int amount=jarAspect.getAmount();
+			IEssentiaContainerItem jarItem=jarAspect.getItem();
+			
+			int canFill =capacity-amount;
+			int quantityToAdd=quantity;
+			if (quantityToAdd>canFill) quantityToAdd=canFill;
+			AspectList aspectList = jarItem.getAspects(jar);
+			if(aspectList==null) aspectList=new AspectList();
+			aspectList.add(aspect, quantityToAdd);			
+			jarItem.setAspects(jar, aspectList);
+	
+			inventory.onContentsChanged(0);
+			return quantity-quantityToAdd;//remains not added
+			
+		}
+		
+		return quantity;
+	}
+	
+	
 	@Override
 	public boolean doesContainerAccept(Aspect aspect) {
-		return false;
+		JarAspect jarAspect=this.getJarAspect();
+		if (jarAspect==null)return false;
+		if (jarAspect.getAspect()==null)return true;//isEmpty
+		return jarAspect.getAspect().equals(aspect);
 	}
 
 	@Override
-	public boolean takeFromContainer(Aspect aspect, int i) {
+	public boolean takeFromContainer(Aspect aspect, int amtToRemove) {
+		JarAspect jarAspect=this.getJarAspect();
+		if (jarAspect.getAspect()==aspect) {
+			int sourceAmmount=jarAspect.getAmount();
+			if (sourceAmmount>=amtToRemove) {
+				IEssentiaContainerItem jarItem=jarAspect.getItem();
+				
+				ItemStack internalJar = inventory.getStackInSlot(0);
+				AspectList aspectList = jarItem.getAspects(internalJar);
+				boolean hasToRemoveTag =false;
+				if ((sourceAmmount-amtToRemove)==0) hasToRemoveTag=true;
+				
+				jarItem.setAspects(internalJar, aspectList.remove(aspect, amtToRemove));
+				if (hasToRemoveTag)internalJar.setTagCompound(null);							
+				comparatorSignal();// Updates if needed
+				return true;
+			}
+		}
 		return false;
+		
 	}
 
 	@Override
-	public boolean takeFromContainer(AspectList aspectList) {
-		return false;
+	public boolean takeFromContainer(AspectList aspectList) {		
+		Aspect aspect=(aspectList.getAspects())[0];
+		int amount=aspectList.getAmount(aspect);
+		return takeFromContainer(aspect,amount);
 	}
 
 	@Override
-	public boolean doesContainerContainAmount(Aspect aspect, int i) {
+	public boolean doesContainerContainAmount(Aspect aspect, int amtToCheck) {
+		JarAspect jarAspect=this.getJarAspect();
+		if (jarAspect.getAspect()==aspect) {
+			int sourceAmmount=jarAspect.getAmount();
+			if (sourceAmmount>=amtToCheck) {
+				return true;
+			}
+		}
 		return false;
 	}
 
 	@Override
 	public boolean doesContainerContain(AspectList aspectList) {
-		return false;
+		Aspect aspect=(aspectList.getAspects())[0];
+		int amount=aspectList.getAmount(aspect);
+		return doesContainerContainAmount(aspect,amount);
 	}
 
 	@Override
 	public int containerContains(Aspect aspect) {
+		JarAspect jarAspect=this.getJarAspect();
+		if (jarAspect.getAspect()==aspect) return jarAspect.getAmount();
 		return 0;
+	}
+
+	@Override
+	public boolean isConnectable(EnumFacing face) {
+
+		JarAspect jarAspect=this.getJarAspect();
+		if (jarAspect==null) return false;
+		
+		for(EnumFacing dir : EnumFacing.HORIZONTALS) 
+			if (face.equals(dir)) return true;
+		
+		return false;
+	}
+
+	@Override
+	public boolean canInputFrom(EnumFacing face) {
+		return isConnectable(face);
+	}
+
+	@Override
+	public boolean canOutputTo(EnumFacing face) {
+		return isConnectable(face);
+	}
+
+	@Override
+	public void setSuction(Aspect aspect, int amount) {
+		int internalSucction=0;
+	}
+
+	@Override
+	public Aspect getSuctionType(EnumFacing face) {
+		JarAspect jarAspect=this.getJarAspect();
+		if (jarAspect==null) return null;	
+		Aspect aspect=jarAspect.getAspect();;
+		return aspect;		
+	}
+
+	@Override
+	public int getSuctionAmount(EnumFacing face) {
+		JarAspect jarAspect=this.getJarAspect();
+		if (jarAspect==null) return 0;
+		
+		int capacity=jarAspect.getCapacity();
+		int ammount =jarAspect.getAmount();
+		return Math.max(32,(capacity-ammount));
+	}
+
+	@Override
+	public int takeEssentia(Aspect aspect, int amtToRemove, EnumFacing face) {
+		JarAspect jarAspect=this.getJarAspect();
+		if(jarAspect.getAspect()!=aspect) return 0;
+		int sourceAmmount=jarAspect.getAmount();
+		if (sourceAmmount==0) return 0;
+
+		int canBeRemoved=Math.min(amtToRemove, sourceAmmount);
+		IEssentiaContainerItem jarItem=jarAspect.getItem();
+		ItemStack internalJar = inventory.getStackInSlot(0);
+		AspectList aspectList = jarItem.getAspects(internalJar);
+		boolean hasToRemoveTag =false;
+		if ((sourceAmmount-canBeRemoved)==0) hasToRemoveTag=true;
+
+		jarItem.setAspects(internalJar, aspectList.remove(aspect, canBeRemoved));
+		if (hasToRemoveTag)internalJar.setTagCompound(null);							
+		comparatorSignal();// Updates if needed
+		return canBeRemoved;			
+		//Returns:how much was actually taken
+	}
+
+	@Override
+	public int addEssentia(Aspect aspect, int amountToAdd, EnumFacing face) {
+	
+		int amountNotAdded=addToContainer(aspect, amountToAdd);
+		return amountToAdd-amountNotAdded;
+		//Returns:how much was actually added
+	}
+
+	@Override
+	public Aspect getEssentiaType(EnumFacing face) {
+		return getSuctionType(face); 
+	}
+
+	@Override
+	public int getEssentiaAmount(EnumFacing face) {
+		JarAspect jarAspect=this.getJarAspect();
+		return jarAspect.getAmount();
+	}
+
+	@Override
+	public int getMinimumSuction() {
+		return 1;
+	}
+
+	@Override
+	public boolean isBlocked() {
+		JarAspect jarAspect=this.getJarAspect();
+		if (jarAspect==null) return true;
+		if (jarAspect.getAspect()==null)return true;
+		return false;
 	}
 
 }
