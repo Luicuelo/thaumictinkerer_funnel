@@ -3,8 +3,11 @@
   "defaults": {"model": "thaumictinkerer_funnel:funnel"},
   "variants": {
   	"normal": [{}],
-    "jar=false": [{}],
-    "jar=true":  [{}],
+    "jar=false": {"model": "thaumictinkerer_funnel:funnel"},
+    "jar=true":  {"model": "thaumictinkerer_funnel:funnel"}
+    
+    ,
+    
     "inventory": {
       "model": "thaumictinkerer_funnel:funnel",
       "transform": "forge:default-block"

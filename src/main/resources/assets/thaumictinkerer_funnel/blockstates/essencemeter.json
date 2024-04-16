@@ -1,0 +1,23 @@
+{
+  "defaults": {"model": "thaumictinkerer_funnel:glass_red"},
+  "variants": {
+    "normal": { "model": "thaumictinkerer_funnel:glass_red" },
+    "amtcolor=black":{"model":"thaumictinkerer_funnel:glass_black"},
+	"amtcolor=blue":{"model":"thaumictinkerer_funnel:glass_blue"},
+	"amtcolor=brown":{"model":"thaumictinkerer_funnel:glass_brown"},
+	"amtcolor=cyan":{"model":"thaumictinkerer_funnel:glass_cyan"},
+	"amtcolor=gray":{"model":"thaumictinkerer_funnel:glass_gray"},
+	"amtcolor=green":{"model":"thaumictinkerer_funnel:glass_green"},
+	"amtcolor=light_blue":{"model":"thaumictinkerer_funnel:glass_light_blue"},
+	"amtcolor=lime":{"model":"thaumictinkerer_funnel:glass_lime"},
+	"amtcolor=magenta":{"model":"thaumictinkerer_funnel:glass_magenta"},
+	"amtcolor=orange":{"model":"thaumictinkerer_funnel:glass_orange"},
+	"amtcolor=pink":{"model":"thaumictinkerer_funnel:glass_pink"},
+	"amtcolor=purple":{"model":"thaumictinkerer_funnel:glass_purple"},
+	"amtcolor=red":{"model":"thaumictinkerer_funnel:glass_red"},
+	"amtcolor=silver":{"model":"thaumictinkerer_funnel:glass_silver"},
+	"amtcolor=white":{"model":"thaumictinkerer_funnel:glass_white"},
+	"amtcolor=yellow":{"model":"thaumictinkerer_funnel:glass_yellow"},
+    "inventory": { "model": "thaumictinkerer_funnel:glass_red" }
+  }
+}
