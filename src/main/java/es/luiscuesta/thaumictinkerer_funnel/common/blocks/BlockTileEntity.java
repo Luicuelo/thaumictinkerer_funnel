@@ -8,8 +8,6 @@ import javax.annotation.Nullable;
 
 import es.luiscuesta.thaumictinkerer_funnel.common.libs.LibMisc;
 import es.luiscuesta.thaumictinkerer_funnel.common.tileentity.ITileEntityThaumicTinkerer;
-import es.luiscuesta.thaumictinkerer_funnel.common.tileentity.TileEntityBase;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
@@ -103,6 +101,7 @@ public abstract  class BlockTileEntity<T extends TileEntity> extends TTBlock {
     
     public abstract Class<? extends TileEntity> getClassTileEntity();
     	
+    public abstract void onBlockPlaced(World world,BlockPos pos,ItemStack itemStackUsed);
 
     @Override
     public abstract TileEntity createTileEntity(World world, IBlockState state);

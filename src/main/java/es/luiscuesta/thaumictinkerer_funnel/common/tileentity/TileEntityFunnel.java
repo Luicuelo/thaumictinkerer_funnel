@@ -3,18 +3,24 @@ package es.luiscuesta.thaumictinkerer_funnel.common.tileentity;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import es.luiscuesta.thaumictinkerer_funnel.common.blocks.BlockFunnel;
 import es.luiscuesta.thaumictinkerer_funnel.common.config.TTConfig;
 import es.luiscuesta.thaumictinkerer_funnel.common.misc.SingleItemStackHandler;
-
 import net.minecraft.block.BlockHopper;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityHopper;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
@@ -24,12 +30,11 @@ import thaumcraft.api.aspects.IAspectContainer;
 import thaumcraft.api.aspects.IAspectSource;
 import thaumcraft.api.aspects.IEssentiaContainerItem;
 import thaumcraft.api.aspects.IEssentiaTransport;
+import thaumcraft.api.items.ItemsTC;
 import thaumcraft.common.tiles.essentia.TileJarFillable;
 
 public class TileEntityFunnel extends TileEntityJarFillable
 		implements IAspectContainer, ITickable, IAspectSource,IEssentiaTransport {
-
-
 
 	public class JarAspect {
 
@@ -60,7 +65,6 @@ public class TileEntityFunnel extends TileEntityJarFillable
 			_aspect = aspect;
 			_jarItem=jarItem;
 		}
-
 	}
 
 	private class MyItemStackHandler extends  SingleItemStackHandler{
@@ -87,11 +91,11 @@ public class TileEntityFunnel extends TileEntityJarFillable
 				return stack;
 			return super.insertItem(slot, stack, simulate);
 		}
-		
-		
+				
 	}
 
 	private MyItemStackHandler inventory = new MyItemStackHandler();
+	private Aspect lastAspect=null;
 	private int lastComparatorSignal = 0;
 	private int speed = 20;
 	private static final int TITLE_TICK=20;
@@ -110,31 +114,45 @@ public class TileEntityFunnel extends TileEntityJarFillable
 	
 	public int comparatorSignal() {
 
+		Aspect aspect;
+		boolean aspectHasChanged=false;
+		boolean signalHasChanged;
 		JarAspect jarAspect = getJarAspect();
 		int signal = 0;
 		int ammount = 0;
 		int capacity = 0;
 
 		if (jarAspect != null) {
+			aspect=jarAspect.getAspect();
+			aspectHasChanged=(aspect!=lastAspect);
+			lastAspect=aspect;
 			ammount = jarAspect.getAmount();
 			capacity = jarAspect.getCapacity();
 			signal = (int) Math.floor((double) (ammount * 15d) / (double) capacity);
 			if (signal==0 && ammount>0)signal=1;
+		}else {
+			aspectHasChanged=(lastAspect!=null);
+			lastAspect=null;
 		}
 
-		// if (jarAspect!=null) System.out.println(jarAspect.getAspect().getName()+"
-		// Amount:"+ammount+" Capadity:"+capacity);
-		if (lastComparatorSignal != signal) {
-			// System.out.println(" Signal change from:"+lastComparatorInputOverride+"
-			// to:"+signal);
-			lastComparatorSignal = signal;
-			sendUpdates();
+		signalHasChanged=(lastComparatorSignal != signal);
+		lastComparatorSignal = signal;
+		
+		if (signalHasChanged||aspectHasChanged) {			
+			TileEntityEssentiaMeter tileEntityEssentiaMeter=findTileEntityEssentiaMeterFromMe();
+			if (tileEntityEssentiaMeter!=null)tileEntityEssentiaMeter.updateInfoFromHopper();	
 			
-			if(signal==0 && findTileEntityEssentiaMeter()) {
-				changeJar();
-				//EntityEssentiaMeter acts as comparator circuit to change jar
+			if(signalHasChanged) {
+				// System.out.println(" Signal change from:"+lastComparatorInputOverride+to:"+signal);				
+				sendUpdates();				
+				if(!TTConfig.disableJarSwapping&&signal==0 && findTileEntityEssentiaMeterToMe()) {
+					changeJar(); //EntityEssentiaMeter acts as comparator circuit to change jar when empty
+				}
+				if (tileEntityEssentiaMeter!=null&&!tileEntityEssentiaMeter.getRedstonePowered()) {				
+					if (ammount>0&&ammount==capacity)changeJar();//is full
+				}
 			}
-		}
+		}				
 		return signal;
 	}
 	
@@ -153,13 +171,41 @@ public class TileEntityFunnel extends TileEntityJarFillable
 		return false;
 	}
 	
-	private boolean findTileEntityEssentiaMeter() {				
+	private boolean findTileEntityEssentiaMeterToMe() {				
 		for(EnumFacing dir : EnumFacing.HORIZONTALS) {// EnumFacing.HORIZONTALS
 			if(checkTileEntityEssentiaMeter(pos.offset(dir))) return true;		
 		}		 
 		if(checkTileEntityEssentiaMeter(pos.up())) return true;			
 		return false;
 	}
+	
+	
+	private TileEntityEssentiaMeter findTileEntityEssentiaMeterFromMe() {
+		TileEntity tile = world.getTileEntity(pos.down());
+		if (tile != null && tile instanceof TileEntityHopper) {
+			TileEntity hoppered = getHopperFacing(tile.getPos(), tile.getBlockMetadata());
+			if (hoppered instanceof TileEntityEssentiaMeter) {
+				return (TileEntityEssentiaMeter)hoppered;
+			}
+		}		
+		return null;		
+	} 	
+	
+
+	private void clearTag(ItemStack jar) {
+		
+		Aspect aspect= BlockFunnel.getAspectFromTag(jar);
+		if (aspect!=null) {
+			NBTTagCompound itemTags = new NBTTagCompound();
+			itemTags.setString("AspectFilter",aspect.getTag());
+			jar.setTagCompound(itemTags);
+			return;			
+		}		
+		jar.setTagCompound(null);	
+			
+	}
+		
+	
 	
 	public JarAspect getJarAspect() {
 		int amount = 0;
@@ -169,10 +215,10 @@ public class TileEntityFunnel extends TileEntityJarFillable
 		if (jar == ItemStack.EMPTY) return null;
 		if (!(jar.getItem() instanceof IEssentiaContainerItem)) return null;
 		IEssentiaContainerItem jarItem = (IEssentiaContainerItem) jar.getItem();		
-
-		int capacity = ItemCapacityDictionary.getCapcityFromJar(jar);
+	
+		int capacity = ItemCapacityDictionary.getCapcityFromJar(jar);		
 		if (jarItem.getAspects(jar) == null || jarItem.getAspects(jar).size() == 0)  {			
-			return new JarAspect(capacity, 0, null,jarItem);
+			return new JarAspect(capacity, 0, BlockFunnel.getAspectFromTag(jar),jarItem);//if have filter returns filter
 		}
 		//the jar is empty
 		
@@ -195,6 +241,8 @@ public class TileEntityFunnel extends TileEntityJarFillable
 		if (!(inventory.getStackInSlot(0).getItem() instanceof IEssentiaContainerItem))
 			return;
 
+		if (TTConfig.disableJarSwapping)return;
+		
 		ItemStack jar = inventory.getStackInSlot(0);
 		TileEntity hopper = world.getTileEntity(pos.down());
 		if (hopper != null && hopper instanceof TileEntityHopper) {
@@ -215,13 +263,46 @@ public class TileEntityFunnel extends TileEntityJarFillable
 			changeJar();
 		}
 	}
+	
+	private boolean compareItemStacks(ItemStack itemStackIn, ItemStack itemStack) {
+		
+		if(itemStackIn.getMetadata()!=itemStack.getMetadata()) return false;
+		if(BlockFunnel.getAspectFromTag(itemStackIn)!=BlockFunnel.getAspectFromTag(itemStack))return false;
+		
+		boolean stackInEssentiaContainer=(itemStackIn.getItem() instanceof IEssentiaContainerItem) ;
+		boolean stackEssentiaContainer=(itemStack.getItem() instanceof IEssentiaContainerItem) ;
+		
+		if (!stackInEssentiaContainer&& !stackEssentiaContainer)return true;
+		if (stackInEssentiaContainer!=stackEssentiaContainer)return false;
+		
+		IEssentiaContainerItem essentiaItemIn=(IEssentiaContainerItem) (itemStackIn.getItem());
+		IEssentiaContainerItem essentiaItem=(IEssentiaContainerItem) (itemStack.getItem());		
+		
+		AspectList aspectListIn=essentiaItemIn.getAspects(itemStackIn);
+		AspectList aspectList=essentiaItem.getAspects(itemStack);
+		
+		boolean aspectListInIsNull=(aspectListIn==null);
+		boolean aspectListIsNull=(aspectList==null);		
+		if (aspectListInIsNull!=aspectListIsNull)return false;
+		
+		if (!aspectListInIsNull) {
+			if (aspectListIn.size()!=aspectList.size()) return false;
+					
+			Aspect[] aspectsIn=aspectListIn.getAspects();
+			Aspect[] aspects=aspectList.getAspects();
+			for (int index = 0; index<aspectsIn.length;index++) {
+				if (aspectsIn[index]!=aspects[index]) return false;
+			}		
+		}
+		return true;			
+	}
 
 	private boolean insertInHopper(ItemStack itemStackIn, TileEntityHopper hopper) {
 
 		ItemStack itemStack = null;
 		if (itemStackIn == ItemStack.EMPTY)
 			return false;
-		int itemStackInMetadata = itemStackIn.getMetadata();
+	
 
 		//System.out.println("DBG: Try to insert into Hopper:"+itemStackInMetadata);
 		for (int i = 0; i < hopper.getSizeInventory(); ++i) {
@@ -234,7 +315,7 @@ public class TileEntityFunnel extends TileEntityJarFillable
 
 				if (quantity < hopper.getInventoryStackLimit() && quantity < maxQuantity) {
 					if (itemStack.getItem().equals(itemStackIn.getItem())
-							&& itemStack.getMetadata() == itemStackInMetadata) {
+							&& compareItemStacks(itemStackIn, itemStack) ) {
 						itemStack.setCount(quantity + 1);
 						if (itemStackIn.getCount() - 1 <= 0)
 							itemStackIn.setCount(0);
@@ -271,12 +352,10 @@ public class TileEntityFunnel extends TileEntityJarFillable
 		return false;
 	}
 
-	
-
-
 	public boolean isItemValidForSlot(int index, ItemStack stack) {
 		Item item = stack.getItem();
-		return item instanceof IEssentiaContainerItem;
+		if (stack.getItem()==ItemsTC.phial)return false; 
+		return (item instanceof IEssentiaContainerItem);
 	}
 
 	public int getSpeed() {
@@ -379,13 +458,12 @@ public class TileEntityFunnel extends TileEntityJarFillable
 							boolean hasToRemoveTag =false;
 							if ((sourceAmmount-amtToRemove)==0) hasToRemoveTag=true;
 							jarItem.setAspects(sourceJar, aspectList.remove(aspect, amtToRemove));
-							if (hasToRemoveTag)sourceJar.setTagCompound(null);							
+							if (hasToRemoveTag) clearTag(sourceJar);							
 							comparatorSignal();// Updates if needed
 						}
 					}
 				}
 			}
-
 		}
 	}
 
@@ -480,8 +558,15 @@ public class TileEntityFunnel extends TileEntityJarFillable
 	@Override
 	public boolean doesContainerAccept(Aspect aspect) {
 		JarAspect jarAspect=this.getJarAspect();
-		if (jarAspect==null)return false;
-		if (jarAspect.getAspect()==null)return true;//isEmpty
+		if (jarAspect==null)return false;//no jar
+		if (jarAspect.getAspect()==null) {
+			TileEntityEssentiaMeter tileEntityEssentiaMeter=findTileEntityEssentiaMeterFromMe();
+			if(tileEntityEssentiaMeter==null)return true;
+			Aspect aspectMeter=tileEntityEssentiaMeter.getHopperAspect();
+			if (aspectMeter==null) return true;
+			return aspectMeter.equals(aspect); //The essentia meter has aspect in hopper
+		}
+		if (jarAspect.getAmount()>=jarAspect.getCapacity()) return false;//is full
 		return jarAspect.getAspect().equals(aspect);
 	}
 
@@ -499,7 +584,7 @@ public class TileEntityFunnel extends TileEntityJarFillable
 				if ((sourceAmmount-amtToRemove)==0) hasToRemoveTag=true;
 				
 				jarItem.setAspects(internalJar, aspectList.remove(aspect, amtToRemove));
-				if (hasToRemoveTag)internalJar.setTagCompound(null);							
+				if (hasToRemoveTag) clearTag(internalJar);							
 				comparatorSignal();// Updates if needed
 				return true;
 			}
@@ -554,20 +639,25 @@ public class TileEntityFunnel extends TileEntityJarFillable
 	public boolean canInputFrom(EnumFacing face) {					
 		if (isConnectable(face)) {
 			JarAspect jarAspect=this.getJarAspect();
-			if (jarAspect.getAmount()>=jarAspect.getCapacity()) return false;
+			if (jarAspect.getAmount()>=jarAspect.getCapacity()) return false;;//is full
 			return true;
 		}
 		return false;
 	}
 
 	@Override
-	public boolean canOutputTo(EnumFacing face) {
-		return isConnectable(face);
+	public boolean canOutputTo(EnumFacing face) {		
+		if ( isConnectable(face)) {
+			JarAspect jarAspect=this.getJarAspect();		
+			if (jarAspect.getAmount()==0) return false;//is empty
+			return true;
+		}
+		return false;
 	}
 
 	@Override
 	public void setSuction(Aspect aspect, int amount) {
-		int internalSucction=0;
+		//int internalSucction=0;
 	}
 
 	@Override
@@ -604,7 +694,7 @@ public class TileEntityFunnel extends TileEntityJarFillable
 		if ((sourceAmmount-canBeRemoved)==0) hasToRemoveTag=true;
 
 		jarItem.setAspects(internalJar, aspectList.remove(aspect, canBeRemoved));
-		if (hasToRemoveTag)internalJar.setTagCompound(null);							
+		if (hasToRemoveTag)clearTag(internalJar);							
 		comparatorSignal();// Updates if needed
 		return canBeRemoved;			
 		//Returns:how much was actually taken
@@ -638,9 +728,84 @@ public class TileEntityFunnel extends TileEntityJarFillable
 	public boolean isBlocked() {
 		JarAspect jarAspect=this.getJarAspect();
 		if (jarAspect==null) return true;
-		if (jarAspect.getAmount()>=jarAspect.getCapacity()) return true;
-		//can receive if is empty
 		return false;
+	}
+	
+	
+	public void fromPhial(World worldIn, BlockPos pos, EntityPlayer player, EnumHand hand, IBlockState bi,
+			IEssentiaContainerItem phialItem) {
+
+		int base = 10;
+		JarAspect jarAspect = this.getJarAspect();
+		if (jarAspect == null)
+			return;
+
+		int jarAmount = jarAspect.getAmount();
+		int jarCapacity = jarAspect.getCapacity();
+
+		ItemStack playerStack = player.getHeldItem(hand);
+		AspectList al;
+		if (playerStack.getItem() instanceof IEssentiaContainerItem) {
+			al = ((IEssentiaContainerItem) playerStack.getItem()).getAspects(playerStack);
+		} else
+			return;
+
+		if (al != null && al.size() == 1) {
+			Aspect phialItemAspect = al.getAspects()[0];
+			if (player.getHeldItem(hand).getItemDamage() != 0) {
+
+				if (jarAmount <= jarCapacity - base && doesContainerAccept(phialItemAspect)) {
+					if (world.isRemote) {
+						player.swingArm(hand);
+						player.playSound(SoundEvents.ITEM_BOTTLE_FILL, 0.25f, 1.0f);
+						return;
+					}
+					if (addToContainer(phialItemAspect, base) == 0) {
+						world.markAndNotifyBlock(pos, world.getChunkFromBlockCoords(pos), bi, bi, 3);
+						markDirty();
+						player.getHeldItem(hand).shrink(1);
+						if (!player.inventory.addItemStackToInventory(new ItemStack((Item) phialItem, 1, 0))) {
+							world.spawnEntity(new EntityItem(world, pos.getX() + 0.5f, pos.getY() + 0.5f,
+									pos.getZ() + 0.5f, new ItemStack((Item) phialItem, 1, 0)));
+						}						
+						player.inventoryContainer.detectAndSendChanges();
+					}
+				}
+			}
+		}
+	}
+	
+	public void fillPhial(World worldIn, BlockPos pos, EntityPlayer player, EnumHand hand, IEssentiaContainerItem phialItem) {
+		
+		int base=10;
+		
+		JarAspect jarAspect = this.getJarAspect();
+		if (jarAspect==null)return;
+		
+		int jarAmount=jarAspect.getAmount();
+		Aspect aspect=jarAspect.getAspect();
+		
+		
+        if (player.getHeldItem(hand).getItemDamage() == 0) {
+
+            if (jarAmount >= base) {
+                if (world.isRemote) {
+                    player.swingArm(hand);    
+                    player.playSound(SoundEvents.ITEM_BOTTLE_FILL, 0.25f, 1.0f);
+                    return;
+                }
+               
+                if (takeFromContainer(aspect, base)) {
+                    player.getHeldItem(hand).shrink(1);
+                    ItemStack phial2 = new ItemStack((Item)phialItem,1,1);
+                    phialItem.setAspects(phial2, new AspectList().add(aspect, base));
+                    if (!player.inventory.addItemStackToInventory(phial2)) {
+                        world.spawnEntity(new EntityItem(world, pos.getX() + 0.5f, pos.getY() + 0.5f, pos.getZ() + 0.5f, phial2));
+                    }                   
+                    player.inventoryContainer.detectAndSendChanges();
+                }
+            }
+        }        
 	}
 
 }

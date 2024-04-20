@@ -11,20 +11,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
-
 import es.luiscuesta.thaumictinkerer_funnel.Thaumictinkerer_funnel;
 import es.luiscuesta.thaumictinkerer_funnel.common.helper.IItemVariants;
 import es.luiscuesta.thaumictinkerer_funnel.common.libs.LibMisc;
-import es.luiscuesta.thaumictinkerer_funnel.common.utils.IVariant;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemMeshDefinition;
 import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.renderer.block.statemap.StateMapperBase;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
@@ -40,34 +35,23 @@ public class ModelManager {
     private static final ModelManager INSTANCE = new ModelManager();
 
     private Map<Item, Map<String,ModelResourceLocation>> Item_Variants_baked=new HashMap<>();
-    /**
-     * default mapper for properties to string
-     */
-    private final StateMapperBase propertyStringMapper = new StateMapperBase() {
-        @Override
-        protected ModelResourceLocation getModelResourceLocation(@Nonnull final IBlockState state) {
-            return new ModelResourceLocation("minecraft:air");
-        }
-    };
-    /**
-     * The {@link Item}s that have had models registered so far.
-     */
+
     private final Set<Item> itemsRegistered = new HashSet<>();
-
-    /**
-     * Empty constructor
-     */
-    private ModelManager() {
-
-    }
-
-
+    private ModelManager() { }
     public static ModelManager getInstance() {
         return INSTANCE;
     }
 
 
 /*    
+  
+     private final StateMapperBase propertyStringMapper = new StateMapperBase() {
+        @Override
+        protected ModelResourceLocation getModelResourceLocation(@Nonnull final IBlockState state) {
+            return new ModelResourceLocation("minecraft:air");
+        }
+    };
+ 
     @SubscribeEvent
     public static void registerAllModels(final ModelRegistryEvent event) {
         //INSTANCE.registerFluidModels();
@@ -101,21 +85,7 @@ public class ModelManager {
         }
     }
 
-
-    private <T extends IVariant> void registerVariantItemModels(final Item item, final String variantName, final T[] values) {
-        for (final T value : values) {
-
-            registerItemModelForMeta(item, value.getMeta(), variantName + "=" + value.getName());
-        }
-    }
-
-
-
-
-    private void registerItemModel(final Item item, final String modelLocation) {
-        final ModelResourceLocation fullModelLocation = new ModelResourceLocation(modelLocation, "inventory");
-        registerItemModel(item, fullModelLocation);
-    }
+    
 
     private void registerItemModel(final Item item, final ModelResourceLocation fullModelLocation) {
         ModelBakery.registerItemVariants(item, fullModelLocation); // Ensure the custom model is loaded and prevent the default model from being loaded
@@ -157,43 +127,35 @@ public class ModelManager {
         else
             registerItemModel(item, stack -> fullModelLocation);
     }
-
-    /**
-     * Register an {@link ItemMeshDefinition} for an {@link Item}.
-     *
-     * @param item           The Item
-     * @param meshDefinition The ItemMeshDefinition
-     */
+    
     private void registerItemModel(final Item item, final ItemMeshDefinition meshDefinition) {
         itemsRegistered.add(item);
         ModelLoader.setCustomMeshDefinition(item, meshDefinition);
     }
+ 
 
+    /*
+      
+    private void registerItemModel(final Item item, final String modelLocation) {
+        final ModelResourceLocation fullModelLocation = new ModelResourceLocation(modelLocation, "inventory");
+        registerItemModel(item, fullModelLocation);
+    }
+    
+    private <T extends IVariant> void registerVariantItemModels(final Item item, final String variantName, final T[] values) {
+        for (final T value : values) {
 
-    /**
-     * Register a model for a metadata value an {@link Item}.
-     * <p>
-     * Uses the registry name as the domain/path and {@code variant} as the variant.
-     *
-     * @param item     The Item
-     * @param metadata The metadata
-     * @param variant  The variant
-     */
+            registerItemModelForMeta(item, value.getMeta(), variantName + "=" + value.getName());
+        }
+    }
+
     private void registerItemModelForMeta(final Item item, final int metadata, final String variant) {
         registerItemModelForMeta(item, metadata, new ModelResourceLocation(Objects.requireNonNull(item.getRegistryName()), variant));
     }
 
-    /**
-     * Register a model for a metadata value of an {@link Item}.
-     * <p>
-     * Uses {@code modelResourceLocation} as the domain, path and variant.
-     *
-     * @param item                  The Item
-     * @param metadata              The metadata
-     * @param modelResourceLocation The full model location
-     */
+
     private void registerItemModelForMeta(final Item item, final int metadata, final ModelResourceLocation modelResourceLocation) {
         itemsRegistered.add(item);
         ModelLoader.setCustomModelResourceLocation(item, metadata, modelResourceLocation);
     }
+       */
 }

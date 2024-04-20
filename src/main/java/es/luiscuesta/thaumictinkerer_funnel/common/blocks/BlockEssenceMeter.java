@@ -8,8 +8,8 @@ import es.luiscuesta.thaumictinkerer_funnel.common.libs.LibBlockNames;
 import es.luiscuesta.thaumictinkerer_funnel.common.libs.LibMisc;
 import es.luiscuesta.thaumictinkerer_funnel.common.tileentity.TileEntityEssentiaMeter;
 import es.luiscuesta.thaumictinkerer_funnel.common.tileentity.TileEntityFunnel;
-
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockHopper;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockFaceShape;
@@ -19,12 +19,14 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
@@ -32,7 +34,6 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import thaumcraft.api.aspects.IEssentiaContainerItem;
 import thaumcraft.api.items.ItemsTC;
 import thaumcraft.common.lib.SoundsTC;
 
@@ -259,9 +260,31 @@ public class BlockEssenceMeter extends BlockTileEntity<TileEntityFunnel> {
         return this.blockState.getBaseState().withProperty(BLOCK_COLOR, BlockColors.getByIndex(meta));
     }
 
+    
+    @SuppressWarnings("deprecation")
+	private boolean findHopperToMe(World worldIn, BlockPos pos) {				
+    	if (worldIn.getBlockState(pos.down()).getBlock() == Blocks.HOPPER) return true;
+    	
+		for(EnumFacing dir : EnumFacing.VALUES) {
+			if (dir.equals(EnumFacing.DOWN))continue;			
+			BlockPos posCheck=pos.offset(dir);			
+			boolean isHopper=(worldIn.getBlockState(posCheck).getBlock() == Blocks.HOPPER);			
+			IBlockState blockState = worldIn.getBlockState(posCheck);
+			if (isHopper&&blockState!=null&blockState.getBlock().hasTileEntity()) {
+			    TileEntity tileEntity = worldIn.getTileEntity(posCheck);
+			    EnumFacing fhdir = BlockHopper.getFacing(tileEntity.getBlockMetadata());
+			    if (posCheck.offset(fhdir).equals(pos)) 
+			    	if (worldIn.getBlockState(posCheck.up()).getBlock() == ModBlocks.funnel) return true;
+			}
+		
+		}		 		
+		return false;
+	}
+    
     @Override
     public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
-        return super.canPlaceBlockAt(worldIn, pos) && worldIn.getBlockState(pos.down()).getBlock() == Blocks.HOPPER;
+        return super.canPlaceBlockAt(worldIn, pos) 
+        		&& findHopperToMe(worldIn, pos);
     }
 
     @Override
@@ -272,6 +295,9 @@ public class BlockEssenceMeter extends BlockTileEntity<TileEntityFunnel> {
 
     @Override
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+    	
+    	if (hand==EnumHand.OFF_HAND)return false; //se dispara una vez por cada mano.
+    	
         TileEntity te = worldIn.getTileEntity(pos);
         if (!(te instanceof TileEntityEssentiaMeter)) return false;
         TileEntityEssentiaMeter meter=(TileEntityEssentiaMeter)te;
@@ -321,7 +347,47 @@ public class BlockEssenceMeter extends BlockTileEntity<TileEntityFunnel> {
         return false;
     }
     
+    //if (stack.hasTagCompound()) { // Check if the ItemStack has a tag compound
+      //  NBTTagCompound tag = stack.getTagCompound(); // Get the tag compound
+    //}
 
+    @Override
+    public  void onBlockPlaced(World world, BlockPos pos,ItemStack itemStackUsed) {
+    	if (world.isRemote)return;
+    	if (itemStackUsed.hasTagCompound()) { 
+           NBTTagCompound tag = itemStackUsed.getTagCompound();
+           if(tag!=null) {
+        	   EnumFacing labelFacing=EnumFacing.getFront(tag.getInteger("labelfacing"));
+        	   if (labelFacing!=null) {
+        		   TileEntity tile = world.getTileEntity(pos);	    	    	
+        	    	if (tile!=null && tile instanceof TileEntityEssentiaMeter) {
+        	    		TileEntityEssentiaMeter tileMeter = (TileEntityEssentiaMeter) tile;
+        	    		tileMeter.setLabelFacing(labelFacing);
+        	    	}
+        	   }
+           }
+         }
+    }
+    
+    @Override
+    public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
+
+    	super.getDrops(drops, world, pos, state, fortune);
+    	ItemStack drop =drops.get(0);
+    
+    	
+    	TileEntity tile = world.getTileEntity(pos);	    	    	
+    	if (tile!=null && tile instanceof TileEntityEssentiaMeter) {
+    		TileEntityEssentiaMeter tileMeter = (TileEntityEssentiaMeter) tile;
+    		EnumFacing labelFacing=tileMeter.getLabelFacing();
+    		if(labelFacing!=null && labelFacing!=EnumFacing.DOWN) {
+    			NBTTagCompound stackTags=new NBTTagCompound();
+    			stackTags.setInteger("labelfacing", labelFacing.getIndex());    	
+    			drop.setTagCompound(stackTags);
+    		}
+    	}    	      
+    }
+    
     @Override
     public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
             super.breakBlock(worldIn, pos, state);

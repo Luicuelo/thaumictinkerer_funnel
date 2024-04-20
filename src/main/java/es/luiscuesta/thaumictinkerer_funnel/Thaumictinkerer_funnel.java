@@ -7,19 +7,12 @@ import es.luiscuesta.thaumictinkerer_funnel.common.libs.LibMisc;
 import es.luiscuesta.thaumictinkerer_funnel.common.misc.ThaumicTInkererCreativeTab;
 import es.luiscuesta.thaumictinkerer_funnel.common.packets.PacketHandler;
 import es.luiscuesta.thaumictinkerer_funnel.proxy.ICommonProxy;
-
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLInterModComms;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import thaumcraft.api.ThaumcraftApi;
-import thaumcraft.api.aspects.AspectList;
-import thaumcraft.api.research.ResearchCategories;
 
 @Mod(modid = LibMisc.MOD_ID, name = LibMisc.MOD_NAME,
      version = LibMisc.MOD_VERSION, dependencies = LibMisc.MOD_DEPENDENCIES)
@@ -55,6 +48,7 @@ public class Thaumictinkerer_funnel {
    
   }
 
+  /*
   @EventHandler
   public void processIMC(FMLInterModComms.IMCEvent event) {
     for (FMLInterModComms.IMCMessage message : event.getMessages()) {
@@ -82,5 +76,6 @@ public class Thaumictinkerer_funnel {
 
     // IDustTrigger.registerDustTrigger(ModBlocks.osmotic_enchanter);
   }
+  */
 
 }

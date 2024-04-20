@@ -56,7 +56,7 @@ public class ClientProxy extends ICommonProxy {
 		 	location=new ResourceLocation(LibMisc.MOD_ID,"blocks/funnel/jar_side");
             textures.getMap().registerSprite(location);
             
-            location=new ResourceLocation(LibMisc.MOD_ID,"blocks/funnel/jar_botton");
+            location=new ResourceLocation(LibMisc.MOD_ID,"blocks/funnel/jar_bottom");
             textures.getMap().registerSprite(location);
             
             location=new ResourceLocation(LibMisc.MOD_ID,"blocks/funnel/jar_top");

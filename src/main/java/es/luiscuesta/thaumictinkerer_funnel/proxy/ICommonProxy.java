@@ -1,11 +1,13 @@
 package es.luiscuesta.thaumictinkerer_funnel.proxy;
 
 import es.luiscuesta.thaumictinkerer_funnel.Thaumictinkerer_funnel;
+import es.luiscuesta.thaumictinkerer_funnel.common.blocks.BlockTileEntity;
 import es.luiscuesta.thaumictinkerer_funnel.common.blocks.ModBlocks;
-
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -43,6 +45,20 @@ public abstract class ICommonProxy {
 		Thaumictinkerer_funnel.modRegistry.registerItems(event);
 	}
 	
+	@SuppressWarnings("deprecation")
+	@SubscribeEvent
+	public static void onBlockPlaced(BlockEvent.PlaceEvent event) {
+	    try {	
+	    	ItemStack stack = event.getItemInHand(); 	        
+	        Block block = event.getPlacedBlock().getBlock(); 
+	        if (block!=null&&block instanceof BlockTileEntity) {
+	        	if(stack!=null)((BlockTileEntity<?>)block).onBlockPlaced(event.getWorld(),event.getPos(), stack);
+	        }
+	        
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
 	
 
 }

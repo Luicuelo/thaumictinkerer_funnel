@@ -16,6 +16,11 @@ public class TTConfig {
     @Config.LangKey("thaumictinkerer_funnel.config.funnel")
     @Config.RangeInt(min = 1, max = 100)
     public static int funnelSpeed = 20;
+    
+    @Config.Comment("If true, automatic jar swapping ,with essentia meter, is disabled.")
+    @Config.Name("Disable Jar Swapping")
+    @Config.LangKey("thaumictinkerer_funnel.config.jarswapping")   
+    public static boolean disableJarSwapping=false;
 
     @Mod.EventBusSubscriber
     private static class EventHandler {

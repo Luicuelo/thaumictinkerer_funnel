@@ -1,4 +1,6 @@
 # thaumictinkerer_funnel
+![image](https://github.com/Luicuelo/thaumictinkerer_funnel/blob/main/src/main/resources/assets/thaumictinkerer_funnel/logo.png)
+
 Modified thaumictinkerer funnel
 
 
@@ -6,5 +8,7 @@ Thaumic Tinkerer modifications for use with jars with a capacity greater than 25
 
 You can detect when the jar is empty and is replaced with another."
 
+![image](https://github.com/Luicuelo/thaumictinkerer_funnel/blob/main/Images/2024-04-19_23.42.02.png)
 
-![image](https://github.com/Luicuelo/thaumictinkerer_funnel/assets/30816963/781f4394-c189-4252-9b18-4a1aa6e5712f)
+
+

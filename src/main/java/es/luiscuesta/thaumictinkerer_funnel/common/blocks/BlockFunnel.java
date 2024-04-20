@@ -6,6 +6,7 @@ import es.luiscuesta.thaumictinkerer_funnel.common.libs.LibMisc;
 import es.luiscuesta.thaumictinkerer_funnel.common.tileentity.TileEntityFunnel;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockHopper;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockFaceShape;
@@ -15,7 +16,9 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumBlockRenderType;
@@ -27,7 +30,10 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import thaumcraft.api.aspects.Aspect;
+import thaumcraft.api.aspects.AspectList;
 import thaumcraft.api.aspects.IEssentiaContainerItem;
+import thaumcraft.api.items.ItemsTC;
 
 public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
 
@@ -71,6 +77,55 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
         return true;
     }
     
+	
+	@Override
+	public boolean canProvidePower(IBlockState state) {
+		return true;
+	}
+	
+	
+	
+    @SuppressWarnings("deprecation")
+	private boolean findMeterToMe(World worldIn, BlockPos pos) {				
+    	for(EnumFacing dir : EnumFacing.VALUES) {
+			if (dir.equals(EnumFacing.DOWN))continue;			
+			BlockPos posCheck=pos.offset(dir);			
+			boolean isHopper=(worldIn.getBlockState(posCheck).getBlock() == Blocks.HOPPER);			
+			IBlockState blockState = worldIn.getBlockState(posCheck);
+			if (isHopper&&blockState!=null&blockState.getBlock().hasTileEntity()) {
+			    TileEntity tileEntity = worldIn.getTileEntity(posCheck);
+			    EnumFacing fhdir = BlockHopper.getFacing(tileEntity.getBlockMetadata());
+			    if (posCheck.offset(fhdir).equals(pos)) 
+			    	if (worldIn.getBlockState(posCheck.up()).getBlock() == ModBlocks.essenceMeter) return true;
+			}
+		
+		}		 		
+		return false;
+	}
+	
+	@Override //block the hopper below
+	public int getWeakPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side) {
+	
+	    World world = blockAccess instanceof World ? (World) blockAccess : null;
+	    if (world == null) return 0;
+	    if (world.isRemote) return 0;
+	    	    
+	    //side is from who is asking
+		if (side==EnumFacing.UP) {
+			IBlockState blockStateDown=world.getBlockState(pos.offset(EnumFacing.DOWN));
+			if(blockStateDown.getBlock() == Blocks.HOPPER) {
+				if (findMeterToMe(world, pos))return 15;
+			}
+		}			
+		return 0;
+	}
+	
+
+	@Override
+	public int getStrongPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side) {
+		return this.getWeakPower(blockState, blockAccess, pos, side);		
+	}
+	
     
 	@Override
 	public boolean hasComparatorInputOverride(IBlockState state) {
@@ -146,19 +201,29 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
         return new TileEntityFunnel();
     }
 
-
+	public static Aspect getAspectFromTag(ItemStack jar) {
+		NBTTagCompound itemTags = jar.getTagCompound();
+		if(itemTags!=null) {
+			String aspectName = itemTags.getString("AspectFilter");
+			return Aspect.getAspect(aspectName);
+		}
+		return null;
+	}
+	
     @Override
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-    	if (worldIn.isRemote) return false;
     	
- 
+    	
+    	if (hand==EnumHand.OFF_HAND)return false;
     	
         TileEntity te = worldIn.getTileEntity(pos);
         if (te instanceof TileEntityFunnel) {
         	        	
             TileEntityFunnel funnel = (TileEntityFunnel) te;
             ItemStack stack = funnel.getInventory().getStackInSlot(0);
+            
             if (stack == ItemStack.EMPTY) {
+            	if (worldIn.isRemote) return true;
                 ItemStack playerStack = playerIn.getHeldItem(hand);
                 if (funnel.isItemValidForSlot(0, playerStack)) {
                     funnel.getInventory().insertItem(0, playerStack.copy(), false);
@@ -171,12 +236,33 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
                 }
             } else {
             	
-                if (hand != EnumHand.MAIN_HAND || !playerIn.getHeldItemMainhand().isEmpty()) return false; 
-            	
+            	ItemStack playerStack=playerIn.getHeldItemMainhand();
+                if (hand != EnumHand.MAIN_HAND || !playerStack.isEmpty()) {                
+                	Item playerItem=playerStack.getItem();
+                	if (playerItem==ItemsTC.phial) {
+                		IEssentiaContainerItem phial=(IEssentiaContainerItem) playerItem;
+                		AspectList phialAspectList=phial.getAspects(playerStack) ;
+                		if (phialAspectList!= null && phialAspectList.size()>=0) {
+                			funnel.fromPhial(worldIn, pos, playerIn, hand, state, phial);
+                		}
+                		else {
+                			funnel.fillPhial(worldIn, pos, playerIn, hand, phial);
+                		}
+                		return true;
+                	}
+                	else return true; 
+                }
+                if (worldIn.isRemote) return true;
                 ItemStack jar = stack.copy();
                 IEssentiaContainerItem item = (IEssentiaContainerItem) stack.getItem();
                 if (item.getAspects(jar) == null || item.getAspects(jar).getAspects().length == 0) {
-                    jar.setTagCompound(null);
+                	Aspect aspectFromTag=getAspectFromTag(jar);
+                	NBTTagCompound itemTags = null;
+                	if (aspectFromTag!=null) {
+                		itemTags=new NBTTagCompound();
+                		itemTags.setString("AspectFilter", aspectFromTag.getTag());
+                	}
+                    jar.setTagCompound(itemTags);
                 }
                 if (!playerIn.inventory.addItemStackToInventory(jar)) {
                     playerIn.dropItem(jar, false);
@@ -206,6 +292,12 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
 	public Class<? extends TileEntity> getClassTileEntity() {
 		// TODO Auto-generated method stub
 		return TileEntityFunnel.class;
+	}
+
+	@Override
+	public void onBlockPlaced(World world, BlockPos pos, ItemStack itemStackUsed) {
+		// TODO Auto-generated method stub
+		
 	}
 }
 

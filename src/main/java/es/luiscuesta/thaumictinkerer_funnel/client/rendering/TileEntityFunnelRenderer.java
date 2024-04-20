@@ -5,7 +5,6 @@
 package es.luiscuesta.thaumictinkerer_funnel.client.rendering;
 
 import java.awt.Color;
-import java.nio.FloatBuffer;
 
 import javax.annotation.Nullable;
 
@@ -16,13 +15,11 @@ import es.luiscuesta.thaumictinkerer_funnel.common.blocks.BlockTileEntity.BakedM
 import es.luiscuesta.thaumictinkerer_funnel.common.blocks.ModBlocks;
 import es.luiscuesta.thaumictinkerer_funnel.common.tileentity.TileEntityFunnel;
 import es.luiscuesta.thaumictinkerer_funnel.common.tileentity.TileEntityFunnel.JarAspect;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockModelRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderItem;
@@ -45,7 +42,7 @@ import thaumcraft.client.lib.RenderCubes;
 
 
 public class TileEntityFunnelRenderer extends TileEntitySpecialRenderer<TileEntityFunnel> {
-	private static FloatBuffer colorBuffer = GLAllocation.createDirectFloatBuffer(4);
+	//private static FloatBuffer colorBuffer = GLAllocation.createDirectFloatBuffer(4);
 	
 
 	@SuppressWarnings("deprecation")
@@ -142,10 +139,12 @@ public class TileEntityFunnelRenderer extends TileEntitySpecialRenderer<TileEnti
 		Tessellator tessellator = Tessellator.getInstance();	
 	 	BufferBuilder bufferBuilder = tessellator.getBuffer();	
 	 	
+	 	/*
 	 	float px=(float) (x - blockPos.getX());
 	 	float py=(float) (y - blockPos.getY());
 	 	float pz= (float) (z - blockPos.getZ());
-	 	//enableStandardItemLighting( px,  py,  pz,1F,world.getLightBrightness(blockPos)); 	
+	 	enableStandardItemLighting( px,  py,  pz,1F,world.getLightBrightness(blockPos)); 	
+	 	*/
 	 	
 		bufferBuilder.setTranslation(x - blockPos.getX(), y - blockPos.getY(), z - blockPos.getZ());
 		bufferBuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);					
@@ -172,7 +171,7 @@ public class TileEntityFunnelRenderer extends TileEntitySpecialRenderer<TileEnti
 			TextureAtlasSprite icon = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("thaumcraft:blocks/animatedglow");
 			bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
 			
-			float r = ((float) co.getRed() / 255.0F) *1.45F;
+			float r = ((float) co.getRed() / 255.0F) *1.10F;
 			float g = ((float) co.getGreen() / 255.0F)*1.05F;
 			float b = ((float) co.getBlue() / 255.0F);
 			
@@ -211,6 +210,8 @@ public class TileEntityFunnelRenderer extends TileEntitySpecialRenderer<TileEnti
 		GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 	}
 	
+
+	/*
 	private static FloatBuffer setColorBuffer(float par0, float par1, float par2, float par3)
     {
         colorBuffer.clear();
@@ -218,7 +219,6 @@ public class TileEntityFunnelRenderer extends TileEntitySpecialRenderer<TileEnti
         colorBuffer.flip();
         return colorBuffer;
     }
-	/*
 	public static void enableStandardItemLighting(float x, float y, float z,float f , float f2)
     {
         GL11.glEnable(GL11.GL_LIGHTING);
