@@ -1,20 +1,13 @@
 package es.luiscuesta.thaumictinkerer_funnel.common.recipes;
 
 import es.luiscuesta.thaumictinkerer_funnel.common.blocks.ModBlocks;
-import es.luiscuesta.thaumictinkerer_funnel.common.libs.LibMisc;
 import es.luiscuesta.thaumictinkerer_funnel.common.libs.LibRecipes;
-
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.ShapelessRecipes;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.registries.IForgeRegistry;
 import thaumcraft.api.aspects.Aspect;
 import thaumcraft.api.aspects.AspectList;

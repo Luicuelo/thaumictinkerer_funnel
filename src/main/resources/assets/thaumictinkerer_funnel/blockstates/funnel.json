@@ -3,11 +3,10 @@
   "defaults": {"model": "thaumictinkerer_funnel:funnel"},
   "variants": {
   	"normal": [{}],
-    "jar=false": {"model": "thaumictinkerer_funnel:funnel"},
-    "jar=true":  {"model": "thaumictinkerer_funnel:funnel"}
-    
-    ,
-    
+    "jar=true,power=false": {"model": "thaumictinkerer_funnel:funnel"},
+    "jar=false,power=false": {"model": "thaumictinkerer_funnel:funnel"},
+    "jar=true,power=true": {"model": "thaumictinkerer_funnel:funnel_pow"},
+    "jar=false,power=true":  {"model": "thaumictinkerer_funnel:funnel_pow"},    
     "inventory": {
       "model": "thaumictinkerer_funnel:funnel",
       "transform": "forge:default-block"

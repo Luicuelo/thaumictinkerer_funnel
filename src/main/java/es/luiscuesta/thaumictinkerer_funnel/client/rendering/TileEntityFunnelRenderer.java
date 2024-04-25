@@ -11,7 +11,6 @@ import javax.annotation.Nullable;
 import org.lwjgl.opengl.GL11;
 
 import es.luiscuesta.thaumictinkerer_funnel.common.blocks.BlockFunnel;
-import es.luiscuesta.thaumictinkerer_funnel.common.blocks.BlockTileEntity.BakedModelCache;
 import es.luiscuesta.thaumictinkerer_funnel.common.blocks.ModBlocks;
 import es.luiscuesta.thaumictinkerer_funnel.common.tileentity.TileEntityFunnel;
 import es.luiscuesta.thaumictinkerer_funnel.common.tileentity.TileEntityFunnel.JarAspect;
@@ -41,6 +40,7 @@ import thaumcraft.api.blocks.BlocksTC;
 import thaumcraft.client.lib.RenderCubes;
 
 
+@SideOnly(Side.CLIENT)
 public class TileEntityFunnelRenderer extends TileEntitySpecialRenderer<TileEntityFunnel> {
 	//private static FloatBuffer colorBuffer = GLAllocation.createDirectFloatBuffer(4);
 	
@@ -49,6 +49,7 @@ public class TileEntityFunnelRenderer extends TileEntitySpecialRenderer<TileEnti
 	@Override
 	public void render(@Nullable TileEntityFunnel te, double x, double y, double z, float pticks, int digProgress, float unused) {
 
+		
 		if(te==null)return;
 		if(!te.getWorld().isRemote)return;
 		if(!te.getWorld().isBlockLoaded(te.getPos(), false)) return;
@@ -119,6 +120,7 @@ public class TileEntityFunnelRenderer extends TileEntitySpecialRenderer<TileEnti
 		}	 
 	
 	}
+	
 	private void drawItem(double x, double y, double z, ItemStack jar ) {
 			GlStateManager.pushMatrix();
 			GlStateManager.disableBlend(); 
@@ -129,6 +131,7 @@ public class TileEntityFunnelRenderer extends TileEntitySpecialRenderer<TileEnti
 		GlStateManager.popMatrix();	
 	}
 	
+	@SideOnly(Side.CLIENT)
 	private void drawModel(TileEntityFunnel te,double x, double y, double z, BlockPos blockPos, IBlockState blockState,Block block, String stringModel) {
 		IBakedModel model =BakedModelCache.getBakedModel(stringModel);
 		World world = te.getWorld();
@@ -159,6 +162,7 @@ public class TileEntityFunnelRenderer extends TileEntitySpecialRenderer<TileEnti
 		
 	}
 	
+	@SideOnly(Side.CLIENT)
 	private  void drawEssentia(TileEntityFunnel te, double x, double y, double z, BlockPos blockPos,IBlockState blockState, Block block, Color co, Float level) {
 		GlStateManager.pushMatrix();
 			Tessellator tessellator = Tessellator.getInstance();

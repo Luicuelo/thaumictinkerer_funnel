@@ -13,24 +13,29 @@ public class ServerProxy extends ICommonProxy {
     public void preInit(FMLPreInitializationEvent event) {
     	super.preInit(event);
     }
-    
-    @Override
-    public void init(FMLInitializationEvent event) {
-		super.init(event);
-    }
 
-    
-	@Override
-	public void postInit(FMLPostInitializationEvent event) {
-		super.postInit(event);
-	}
-	
     
     
     @Override
     public String localize(String translationKey, Object... args) {
         return I18n.translateToLocalFormatted(translationKey, args);
     }
+
+
+
+	@Override
+	public void init(FMLInitializationEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+
+	@Override
+	public void postInit(FMLPostInitializationEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
 
 
 

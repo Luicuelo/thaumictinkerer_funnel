@@ -3,7 +3,6 @@
  */
 
 package es.luiscuesta.thaumictinkerer_funnel.proxy;
-
 import es.luiscuesta.thaumictinkerer_funnel.Thaumictinkerer_funnel;
 import es.luiscuesta.thaumictinkerer_funnel.client.rendering.TileEntityEssentiaMeterRenderer;
 import es.luiscuesta.thaumictinkerer_funnel.client.rendering.TileEntityFunnelRenderer;
@@ -31,25 +30,22 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @Mod.EventBusSubscriber
 public class ClientProxy extends ICommonProxy {
 
-
-	@SideOnly(Side.CLIENT)
-    public void registerRenderers() {
+    @SideOnly(Side.CLIENT)
+	public void registerRenderers() {
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityFunnel.class, new TileEntityFunnelRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityEssentiaMeter.class, new TileEntityEssentiaMeterRenderer());
     }
     
+    @SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event) {
 		Thaumictinkerer_funnel.modRegistry.registerModels(event);
 	}
 	
+	 @SideOnly(Side.CLIENT)
 	 @SubscribeEvent
 	 public static void onTextureStitch(TextureStitchEvent.Pre event) {
 
-			//"textures/blocks/funnel/jar_side.png"
-			//"textures/blocks/funnel/jar_top.png"
-			//"textures/blocks/funnel/jar_side.png"
-		 
 		 	TextureStitchEvent.Pre textures =(TextureStitchEvent.Pre) event ;
 		 	ResourceLocation location;
 		 	
@@ -71,25 +67,25 @@ public class ClientProxy extends ICommonProxy {
     	registerRenderers();
     }
     
-    @Override
-    public void init(FMLInitializationEvent event) {
-    	super.init(event);
-    }
-
-	@Override
-	public void postInit(FMLPostInitializationEvent event) {
-		super.postInit(event);		
-	}
 
 
-    /**
-     * Localize a string
-     * @param translationKey unlocalised string
-     * @param args arguments to the localisation
-     * @return the string fully localised to current locale
-     */
+
     @Override
     public String localize(String translationKey, Object... args) {
         return I18n.format(translationKey, args);
     }
+
+	@Override
+	public void init(FMLInitializationEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void postInit(FMLPostInitializationEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+    
+
 }

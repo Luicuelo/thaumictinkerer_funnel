@@ -134,8 +134,8 @@ public class TileEntityEssentiaMeter extends TileEntityBase implements ITickable
 			BlockPos posCheck=pos.offset(dir);
 			TileEntity tile = world.getTileEntity(posCheck);
 			if (tile instanceof TileEntityHopper) {
-				EnumFacing fhdir = BlockHopper.getFacing(tile.getBlockMetadata());
-				if (posCheck.offset(fhdir).equals(pos)) return fhdir.getOpposite();
+				EnumFacing fhdir = BlockHopper.getFacing(tile.getBlockMetadata());//20240425
+				if (posCheck.offset(fhdir.getOpposite()).equals(pos)) return fhdir;
 			}			
 		}		 		
 		return null;
@@ -158,7 +158,7 @@ public class TileEntityEssentiaMeter extends TileEntityBase implements ITickable
 				EnumFacing dirHopper = findHopperToMe();
 				if (dirHopper != null) {
 					_hopperPosition = dirHopper;
-					tile = getHopper();
+					tile = getHopper(dirHopper);
 				}
 
 			} else

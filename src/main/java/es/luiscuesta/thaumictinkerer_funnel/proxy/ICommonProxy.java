@@ -15,12 +15,10 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 @Mod.EventBusSubscriber
-public abstract class ICommonProxy {
+public abstract class ICommonProxy{
 
 
-    String localize(String translationKey, Object... args) {
-		return null;
-	}
+    abstract String localize(String translationKey, Object... args) ;
     
 	public void preInit(FMLPreInitializationEvent e) {
 		ModBlocks.init();
@@ -29,11 +27,10 @@ public abstract class ICommonProxy {
 		//ModSimpleNetworkChannel.registerMessages();
 	}
 	
-	public void init(FMLInitializationEvent e) {		
-	}
+	public abstract void init(FMLInitializationEvent e);		
+	
 
-	public void postInit(FMLPostInitializationEvent e) {		
-	}
+	public abstract void postInit(FMLPostInitializationEvent e);
 
 	@SubscribeEvent
 	public static void registerBlocks(RegistryEvent.Register<Block> event) {
@@ -45,9 +42,9 @@ public abstract class ICommonProxy {
 		Thaumictinkerer_funnel.modRegistry.registerItems(event);
 	}
 	
-	@SuppressWarnings("deprecation")
 	@SubscribeEvent
-	public static void onBlockPlaced(BlockEvent.PlaceEvent event) {
+    public static  void onBlockPlaced(BlockEvent.PlaceEvent event) {
+		if (event.getWorld().isRemote) return;
 	    try {	
 	    	ItemStack stack = event.getItemInHand(); 	        
 	        Block block = event.getPlacedBlock().getBlock(); 
@@ -58,7 +55,7 @@ public abstract class ICommonProxy {
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	    }
-	}
+	}  
 	
 
 }

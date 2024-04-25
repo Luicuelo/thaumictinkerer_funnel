@@ -183,7 +183,7 @@ public class TileEntityFunnel extends TileEntityJarFillable
 	private TileEntityEssentiaMeter findTileEntityEssentiaMeterFromMe() {
 		TileEntity tile = world.getTileEntity(pos.down());
 		if (tile != null && tile instanceof TileEntityHopper) {
-			TileEntity hoppered = getHopperFacing(tile.getPos(), tile.getBlockMetadata());
+			TileEntity hoppered = getHopperOppositeFacing(tile.getPos(), tile.getBlockMetadata()); //20240425
 			if (hoppered instanceof TileEntityEssentiaMeter) {
 				return (TileEntityEssentiaMeter)hoppered;
 			}
@@ -354,7 +354,8 @@ public class TileEntityFunnel extends TileEntityJarFillable
 
 	public boolean isItemValidForSlot(int index, ItemStack stack) {
 		Item item = stack.getItem();
-		if (stack.getItem()==ItemsTC.phial)return false; 
+		if (stack.getItem()==ItemsTC.phial)return false;
+		if (stack.getItem()==ItemsTC.label)return false; 
 		return (item instanceof IEssentiaContainerItem);
 	}
 
@@ -409,6 +410,11 @@ public class TileEntityFunnel extends TileEntityJarFillable
 
 	private TileEntity getHopperFacing(BlockPos pos, int getBlockMetadata) {
 		EnumFacing i = BlockHopper.getFacing(getBlockMetadata);
+		return world.getTileEntity(pos.offset(i));
+	}
+	
+	private TileEntity getHopperOppositeFacing(BlockPos pos, int getBlockMetadata) {
+		EnumFacing i = BlockHopper.getFacing(getBlockMetadata).getOpposite();
 		return world.getTileEntity(pos.offset(i));
 	}
 
@@ -729,6 +735,11 @@ public class TileEntityFunnel extends TileEntityJarFillable
 		JarAspect jarAspect=this.getJarAspect();
 		if (jarAspect==null) return true;
 		return false;
+	}
+	
+	public void sendUpdate() {
+		world.notifyBlockUpdate(pos, world.getBlockState(pos), world.getBlockState(pos), 2);
+		markDirty();	
 	}
 	
 	

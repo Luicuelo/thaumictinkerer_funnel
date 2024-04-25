@@ -32,8 +32,6 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import thaumcraft.api.items.ItemsTC;
 import thaumcraft.common.lib.SoundsTC;
 
@@ -194,7 +192,6 @@ public class BlockEssenceMeter extends BlockTileEntity<TileEntityFunnel> {
     }
     
     @Override
-    @SideOnly(Side.CLIENT)
     public BlockRenderLayer getBlockLayer()
     {
         return BlockRenderLayer.TRANSLUCENT;
@@ -262,9 +259,7 @@ public class BlockEssenceMeter extends BlockTileEntity<TileEntityFunnel> {
 
     
     @SuppressWarnings("deprecation")
-	private boolean findHopperToMe(World worldIn, BlockPos pos) {				
-    	if (worldIn.getBlockState(pos.down()).getBlock() == Blocks.HOPPER) return true;
-    	
+	private BlockPos findPosFunnelOnHopperToMe(World worldIn, BlockPos pos) {				    	
 		for(EnumFacing dir : EnumFacing.VALUES) {
 			if (dir.equals(EnumFacing.DOWN))continue;			
 			BlockPos posCheck=pos.offset(dir);			
@@ -272,14 +267,20 @@ public class BlockEssenceMeter extends BlockTileEntity<TileEntityFunnel> {
 			IBlockState blockState = worldIn.getBlockState(posCheck);
 			if (isHopper&&blockState!=null&blockState.getBlock().hasTileEntity()) {
 			    TileEntity tileEntity = worldIn.getTileEntity(posCheck);
-			    EnumFacing fhdir = BlockHopper.getFacing(tileEntity.getBlockMetadata());
+			    EnumFacing fhdir = BlockHopper.getFacing(tileEntity.getBlockMetadata()).getOpposite();//20240425
 			    if (posCheck.offset(fhdir).equals(pos)) 
-			    	if (worldIn.getBlockState(posCheck.up()).getBlock() == ModBlocks.funnel) return true;
-			}
-		
+			    	if (worldIn.getBlockState(posCheck.up()).getBlock() == ModBlocks.funnel) return posCheck.up();
+			}		
 		}		 		
-		return false;
+		return null;
 	}
+    
+    private boolean findHopperToMe(World worldIn, BlockPos pos) {	
+    	if (worldIn.getBlockState(pos.down()).getBlock() == Blocks.HOPPER) return true;
+    	BlockPos funnel=findPosFunnelOnHopperToMe(worldIn,pos);
+    	if (funnel==null)return false;
+    	return true;    	
+    }
     
     @Override
     public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
@@ -347,27 +348,25 @@ public class BlockEssenceMeter extends BlockTileEntity<TileEntityFunnel> {
         return false;
     }
     
-    //if (stack.hasTagCompound()) { // Check if the ItemStack has a tag compound
-      //  NBTTagCompound tag = stack.getTagCompound(); // Get the tag compound
-    //}
+    
+	@Override
+	public void onBlockPlaced(World world, BlockPos pos, ItemStack itemStackUsed) {
+		if (world.isRemote) return;
 
-    @Override
-    public  void onBlockPlaced(World world, BlockPos pos,ItemStack itemStackUsed) {
-    	if (world.isRemote)return;
-    	if (itemStackUsed.hasTagCompound()) { 
-           NBTTagCompound tag = itemStackUsed.getTagCompound();
-           if(tag!=null) {
-        	   EnumFacing labelFacing=EnumFacing.getFront(tag.getInteger("labelfacing"));
-        	   if (labelFacing!=null) {
-        		   TileEntity tile = world.getTileEntity(pos);	    	    	
-        	    	if (tile!=null && tile instanceof TileEntityEssentiaMeter) {
-        	    		TileEntityEssentiaMeter tileMeter = (TileEntityEssentiaMeter) tile;
-        	    		tileMeter.setLabelFacing(labelFacing);
-        	    	}
-        	   }
-           }
-         }
-    }
+		if (itemStackUsed.hasTagCompound()) {
+			NBTTagCompound tag = itemStackUsed.getTagCompound();
+			if (tag != null) {
+				EnumFacing labelFacing = EnumFacing.getFront(tag.getInteger("labelfacing"));
+				if (labelFacing != null) {
+					TileEntity tile = world.getTileEntity(pos);
+					if (tile != null && tile instanceof TileEntityEssentiaMeter) {
+						TileEntityEssentiaMeter tileMeter = (TileEntityEssentiaMeter) tile;
+						tileMeter.setLabelFacing(labelFacing);
+					}
+				}
+			}
+		}
+	}
     
     @Override
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {

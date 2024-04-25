@@ -4,7 +4,6 @@ import es.luiscuesta.thaumictinkerer_funnel.Thaumictinkerer_funnel;
 import es.luiscuesta.thaumictinkerer_funnel.common.libs.LibBlockNames;
 import es.luiscuesta.thaumictinkerer_funnel.common.libs.LibMisc;
 import es.luiscuesta.thaumictinkerer_funnel.common.tileentity.TileEntityFunnel;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHopper;
 import net.minecraft.block.material.Material;
@@ -28,8 +27,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import thaumcraft.api.aspects.Aspect;
 import thaumcraft.api.aspects.AspectList;
 import thaumcraft.api.aspects.IEssentiaContainerItem;
@@ -38,6 +35,8 @@ import thaumcraft.api.items.ItemsTC;
 public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
 
     public static final PropertyBool JAR = PropertyBool.create("jar");
+    public static final PropertyBool POWER = PropertyBool.create("power");
+
     public ResourceLocation resourceLocation;
 
 
@@ -45,7 +44,7 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
         super(LibBlockNames.FUNNEL, Material.ROCK, true);
         setHardness(3.0F);
         setResistance(8.0f);
-        setDefaultState(this.getBlockState().getBaseState().withProperty(JAR, false));
+        setDefaultState(this.getBlockState().getBaseState().withProperty(JAR, false).withProperty(POWER, false));
         setTickRandomly(true);
        
         //this.setCreativeTab(thaumictinkerer_funnel.getTab());
@@ -56,7 +55,6 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
     }
     
     @Override
-    @SideOnly(Side.CLIENT)
     public BlockRenderLayer getBlockLayer()
     {
         return BlockRenderLayer.TRANSLUCENT;
@@ -84,25 +82,7 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
 	}
 	
 	
-	
-    @SuppressWarnings("deprecation")
-	private boolean findMeterToMe(World worldIn, BlockPos pos) {				
-    	for(EnumFacing dir : EnumFacing.VALUES) {
-			if (dir.equals(EnumFacing.DOWN))continue;			
-			BlockPos posCheck=pos.offset(dir);			
-			boolean isHopper=(worldIn.getBlockState(posCheck).getBlock() == Blocks.HOPPER);			
-			IBlockState blockState = worldIn.getBlockState(posCheck);
-			if (isHopper&&blockState!=null&blockState.getBlock().hasTileEntity()) {
-			    TileEntity tileEntity = worldIn.getTileEntity(posCheck);
-			    EnumFacing fhdir = BlockHopper.getFacing(tileEntity.getBlockMetadata());
-			    if (posCheck.offset(fhdir).equals(pos)) 
-			    	if (worldIn.getBlockState(posCheck.up()).getBlock() == ModBlocks.essenceMeter) return true;
-			}
-		
-		}		 		
-		return false;
-	}
-	
+
 	@Override //block the hopper below
 	public int getWeakPower(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side) {
 	
@@ -113,8 +93,8 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
 	    //side is from who is asking
 		if (side==EnumFacing.UP) {
 			IBlockState blockStateDown=world.getBlockState(pos.offset(EnumFacing.DOWN));
-			if(blockStateDown.getBlock() == Blocks.HOPPER) {
-				if (findMeterToMe(world, pos))return 15;
+			if(blockStateDown.getBlock() == Blocks.HOPPER) {				
+					if (blockState.getValue(POWER)) return 15;				
 			}
 		}			
 		return 0;
@@ -160,7 +140,7 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, JAR);
+        return new BlockStateContainer(this, JAR,POWER);
     }
 
     @Override
@@ -183,12 +163,17 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
 
     @Override
     public int getMetaFromState(IBlockState state) {
-        return 0;
+       int hasJar=state.getValue(JAR)?1:0;
+       int hasPower=state.getValue(POWER)?1:0;
+       return (2*hasPower+hasJar);
+       
     }
 
     @Override
-    public IBlockState getStateFromMeta(int meta) {
-        return this.blockState.getBaseState().withProperty(JAR, false);
+    public IBlockState getStateFromMeta(int meta) {    	
+        boolean power = (meta & 2) != 0;
+        boolean jar = (meta & 1) != 0;    	
+        return this.blockState.getBaseState().withProperty(JAR, jar).withProperty(POWER, power);
     }
 
     @Override
@@ -213,68 +198,81 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
     @Override
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
     	
-    	
-    	if (hand==EnumHand.OFF_HAND)return false;
-    	
-        TileEntity te = worldIn.getTileEntity(pos);
-        if (te instanceof TileEntityFunnel) {
-        	        	
-            TileEntityFunnel funnel = (TileEntityFunnel) te;
-            ItemStack stack = funnel.getInventory().getStackInSlot(0);
-            
-            if (stack == ItemStack.EMPTY) {
-            	if (worldIn.isRemote) return true;
-                ItemStack playerStack = playerIn.getHeldItem(hand);
-                if (funnel.isItemValidForSlot(0, playerStack)) {
-                    funnel.getInventory().insertItem(0, playerStack.copy(), false);
-                    playerStack.setCount(playerStack.getCount() - 1);
-                    if (playerStack.isEmpty()) {
-                        playerIn.inventory.setInventorySlotContents(playerIn.inventory.currentItem, ItemStack.EMPTY);
-                    }
-                    funnel.markDirty();
-                    return true;
-                }
-            } else {
-            	
-            	ItemStack playerStack=playerIn.getHeldItemMainhand();
-                if (hand != EnumHand.MAIN_HAND || !playerStack.isEmpty()) {                
-                	Item playerItem=playerStack.getItem();
-                	if (playerItem==ItemsTC.phial) {
-                		IEssentiaContainerItem phial=(IEssentiaContainerItem) playerItem;
-                		AspectList phialAspectList=phial.getAspects(playerStack) ;
-                		if (phialAspectList!= null && phialAspectList.size()>=0) {
-                			funnel.fromPhial(worldIn, pos, playerIn, hand, state, phial);
-                		}
-                		else {
-                			funnel.fillPhial(worldIn, pos, playerIn, hand, phial);
-                		}
-                		return true;
-                	}
-                	else return true; 
-                }
-                if (worldIn.isRemote) return true;
-                ItemStack jar = stack.copy();
-                IEssentiaContainerItem item = (IEssentiaContainerItem) stack.getItem();
-                if (item.getAspects(jar) == null || item.getAspects(jar).getAspects().length == 0) {
-                	Aspect aspectFromTag=getAspectFromTag(jar);
-                	NBTTagCompound itemTags = null;
-                	if (aspectFromTag!=null) {
-                		itemTags=new NBTTagCompound();
-                		itemTags.setString("AspectFilter", aspectFromTag.getTag());
-                	}
-                    jar.setTagCompound(itemTags);
-                }
-                if (!playerIn.inventory.addItemStackToInventory(jar)) {
-                    playerIn.dropItem(jar, false);
+		if (hand == EnumHand.OFF_HAND) 	return false;
+		TileEntity te = worldIn.getTileEntity(pos);
+		if (!(te instanceof TileEntityFunnel)) 	return false;
+			
+		TileEntityFunnel funnel = (TileEntityFunnel) te;
+		ItemStack stack = funnel.getInventory().getStackInSlot(0);
+		
+		if (stack == ItemStack.EMPTY) { //no jar
+			if (worldIn.isRemote) 	return true;
+			
+			if (hand == EnumHand.MAIN_HAND && playerIn.getHeldItemMainhand().isEmpty() && !playerIn.isSneaking()) {
+				boolean power = state.getValue(POWER);
+				IBlockState newState = this.getDefaultState().withProperty(POWER, !power);
+				worldIn.notifyBlockUpdate(pos, worldIn.getBlockState(pos),newState, 3);
+				worldIn.setBlockState(pos, newState, 2);			
+				worldIn.notifyNeighborsOfStateChange(pos, this, false);
+				((TileEntityFunnel) te).markDirty();
+				return true;
+			}
+			
+			ItemStack playerStack = playerIn.getHeldItem(hand);
+			if (funnel.isItemValidForSlot(0, playerStack)) {
+				funnel.getInventory().insertItem(0, playerStack.copy(), false);
+				playerStack.setCount(playerStack.getCount() - 1);
+				if (playerStack.isEmpty()) {
+					playerIn.inventory.setInventorySlotContents(playerIn.inventory.currentItem, ItemStack.EMPTY);
+				}
+				funnel.markDirty();
+				return true;
+			}
+			
+			
+			
+		} else {
 
-                }
-                funnel.getInventory().setStackInSlot(0, ItemStack.EMPTY);
-                funnel.markDirty();
-                return true;
-            }
-        }
-        return false;
-    }
+			ItemStack playerStack = playerIn.getHeldItemMainhand();
+			if (hand != EnumHand.MAIN_HAND || !playerStack.isEmpty()) {
+				Item playerItem = playerStack.getItem();
+				if (playerItem == ItemsTC.phial) {
+					IEssentiaContainerItem phial = (IEssentiaContainerItem) playerItem;
+					AspectList phialAspectList = phial.getAspects(playerStack);
+					if (phialAspectList != null && phialAspectList.size() >= 0) {
+						funnel.fromPhial(worldIn, pos, playerIn, hand, state, phial);
+					} else {
+						funnel.fillPhial(worldIn, pos, playerIn, hand, phial);
+					}
+					return true;
+				} else
+					return true;
+			}
+			if (worldIn.isRemote)
+				return true;
+			ItemStack jar = stack.copy();
+			IEssentiaContainerItem item = (IEssentiaContainerItem) stack.getItem();
+			if (item.getAspects(jar) == null || item.getAspects(jar).getAspects().length == 0) {
+				Aspect aspectFromTag = getAspectFromTag(jar);
+				NBTTagCompound itemTags = null;
+				if (aspectFromTag != null) {
+					itemTags = new NBTTagCompound();
+					itemTags.setString("AspectFilter", aspectFromTag.getTag());
+				}
+				jar.setTagCompound(itemTags);
+			}
+			if (!playerIn.inventory.addItemStackToInventory(jar)) {
+				playerIn.dropItem(jar, false);
+
+			}
+			funnel.getInventory().setStackInSlot(0, ItemStack.EMPTY);
+			funnel.markDirty();
+			return true;
+		}
+		
+		return false;
+
+	}
 
     @Override
     public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
@@ -294,9 +292,58 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
 		return TileEntityFunnel.class;
 	}
 
+    
+    @SuppressWarnings("deprecation")
+	private BlockPos findPosFunnelOnHopperToMe(World worldIn, BlockPos pos) {				    	
+		for(EnumFacing dir : EnumFacing.VALUES) {
+			if (dir.equals(EnumFacing.DOWN))continue;			
+			BlockPos posCheck=pos.offset(dir);			
+			boolean isHopper=(worldIn.getBlockState(posCheck).getBlock() == Blocks.HOPPER);			
+			IBlockState blockState = worldIn.getBlockState(posCheck);
+			if (isHopper&&blockState!=null&blockState.getBlock().hasTileEntity()) {
+			    TileEntity tileEntity = worldIn.getTileEntity(posCheck);
+			    EnumFacing fhdir = BlockHopper.getFacing(tileEntity.getBlockMetadata());
+			    if (posCheck.offset(fhdir).equals(pos)) 
+			    	if (worldIn.getBlockState(posCheck.up()).getBlock() == ModBlocks.funnel) return posCheck.up();
+			}		
+		}		 		
+		return null;
+	}
+	
+    @SuppressWarnings("deprecation")
+	private BlockPos findPosFunnelOnHopperFromMe(World worldIn, BlockPos pos) {		
+    	BlockPos posCheck=pos.offset(EnumFacing.DOWN);			
+		if(worldIn.getBlockState(posCheck).getBlock() != Blocks.HOPPER)return null;
+		IBlockState blockState = worldIn.getBlockState(posCheck);
+		if (blockState!=null&blockState.getBlock().hasTileEntity()) {
+		    TileEntity tileEntity = worldIn.getTileEntity(posCheck);
+		    EnumFacing fhdir = BlockHopper.getFacing(tileEntity.getBlockMetadata());
+		    if (worldIn.getBlockState(posCheck.offset(fhdir)).getBlock() == ModBlocks.funnel) return posCheck.offset(fhdir);
+		}
+		
+		return null;
+    }
+	
 	@Override
 	public void onBlockPlaced(World world, BlockPos pos, ItemStack itemStackUsed) {
-		// TODO Auto-generated method stub
+		
+		BlockPos funnelToChange;
+		
+		BlockPos funnel2= findPosFunnelOnHopperFromMe(world, pos);
+		if (funnel2 != null)  {
+			funnelToChange=pos;
+		}else funnelToChange = findPosFunnelOnHopperToMe(world, pos);
+			
+
+		if (funnelToChange != null) {
+			IBlockState newState = ModBlocks.funnel.getDefaultState().withProperty(BlockFunnel.POWER, true);
+			world.setBlockState(funnelToChange, newState, 2);
+			TileEntity tileEntity = world.getTileEntity(funnelToChange);
+			if (tileEntity instanceof TileEntityFunnel) {
+				TileEntityFunnel funnelTile=(TileEntityFunnel) tileEntity;
+				funnelTile.sendUpdate();
+			}
+		}
 		
 	}
 }

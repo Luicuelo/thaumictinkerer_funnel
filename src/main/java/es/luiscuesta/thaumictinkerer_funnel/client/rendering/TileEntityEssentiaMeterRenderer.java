@@ -33,6 +33,7 @@ import thaumcraft.client.lib.RenderCubes;
 import thaumcraft.client.lib.UtilsFX;
 
 
+@SideOnly(Side.CLIENT)
 public class TileEntityEssentiaMeterRenderer extends TileEntitySpecialRenderer<TileEntityEssentiaMeter> {
 
 	private static ResourceLocation TEX_LABEL = new ResourceLocation(LibMisc.MOD_ID, "textures/blocks/meter/label.png");
