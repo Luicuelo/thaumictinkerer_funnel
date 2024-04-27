@@ -1,6 +1,6 @@
 package es.luiscuesta.thaumictinkerer_funnel.common.tileentity;
 
-public interface ITileEntityThaumicTinkerer {
+public interface IRedstoneTileEntity {
 	
 	
 	  public boolean getRedstonePowered();

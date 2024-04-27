@@ -42,6 +42,7 @@ public abstract class ICommonProxy{
 		Thaumictinkerer_funnel.modRegistry.registerItems(event);
 	}
 	
+	@SuppressWarnings("deprecation")
 	@SubscribeEvent
     public static  void onBlockPlaced(BlockEvent.PlaceEvent event) {
 		if (event.getWorld().isRemote) return;

@@ -10,7 +10,6 @@ import es.luiscuesta.thaumictinkerer_funnel.proxy.ICommonProxy;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -23,6 +22,7 @@ public class Thaumictinkerer_funnel {
 	
 @Mod.Instance(LibMisc.MOD_ID) public static Thaumictinkerer_funnel instance;	
 
+// MinecraftForge.EVENT_BUS.register(ModEventSubscriber.class);
 
 @SidedProxy(clientSide="es.luiscuesta.thaumictinkerer_funnel.proxy.ClientProxy", serverSide="es.luiscuesta.thaumictinkerer_funnel.proxy.ServerProxy")
   public static ICommonProxy commonProxy=null;
@@ -32,14 +32,11 @@ public class Thaumictinkerer_funnel {
   public static RegistrationHandler modRegistry= new RegistrationHandler();
   private static CreativeTabs tab;
   
-
-
-
   public static CreativeTabs getTab() { return tab; }
 
   public static void setTab(CreativeTabs tab) { Thaumictinkerer_funnel.tab = tab; }
 
-  @EventHandler
+  @Mod.EventHandler
   public void preInit(FMLPreInitializationEvent event) {
     tab = new ThaumicTInkererCreativeTab();
     logger = event.getModLog();

@@ -11,7 +11,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import thaumcraft.common.tiles.essentia.TileJarFillable;
 
-public  class ItemCapacityDictionary {
+public  class JarCapacityDictionary {
 	private static final Map<String, Integer> ITEM_CAPACITY_MAP = new HashMap<>();
 
 	static {

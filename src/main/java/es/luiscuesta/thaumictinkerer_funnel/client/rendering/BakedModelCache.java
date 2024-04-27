@@ -22,8 +22,6 @@ public final class BakedModelCache {
 
 	private static final Map<String, IBakedModel> BAKED_MODELS = new HashMap<>();
 	static {
-		getBakedModel("block/funnel");
-		getBakedModel("block/funnel_jar");
 		getBakedModel("block/jar_normal");
 	}
 

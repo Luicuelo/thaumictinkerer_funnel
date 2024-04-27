@@ -19,7 +19,7 @@ import thaumcraft.api.aspects.AspectList;
 import thaumcraft.api.aspects.IAspectContainer;
 import thaumcraft.api.aspects.IEssentiaContainerItem;
 
-public class TileEntityEssentiaMeter extends TileEntityBase implements ITickable,IAspectContainer,ITileEntityThaumicTinkerer	 {
+public class TileEntityEssentiaMeter extends TileEntityBase implements ITickable,IAspectContainer,IRedstoneTileEntity	 {
 
 
 	private static final int TITLE_TICK=20;

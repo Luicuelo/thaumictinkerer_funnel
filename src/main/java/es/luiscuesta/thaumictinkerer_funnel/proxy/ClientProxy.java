@@ -9,7 +9,6 @@ import es.luiscuesta.thaumictinkerer_funnel.client.rendering.TileEntityFunnelRen
 import es.luiscuesta.thaumictinkerer_funnel.common.libs.LibMisc;
 import es.luiscuesta.thaumictinkerer_funnel.common.tileentity.TileEntityEssentiaMeter;
 import es.luiscuesta.thaumictinkerer_funnel.common.tileentity.TileEntityFunnel;
-
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -21,30 +20,32 @@ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**
  * Client side proxy
  */
 
-@Mod.EventBusSubscriber
+@Mod.EventBusSubscriber(Side.CLIENT)
 public class ClientProxy extends ICommonProxy {
 
-    @SideOnly(Side.CLIENT)
 	public void registerRenderers() {
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityFunnel.class, new TileEntityFunnelRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(TileEntityEssentiaMeter.class, new TileEntityEssentiaMeterRenderer());
     }
+
+    @Override
+    public void preInit(FMLPreInitializationEvent event) {
+    	super.preInit(event);
+    	registerRenderers();
+    }
     
-    @SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public static void registerModels(ModelRegistryEvent event) {
 		Thaumictinkerer_funnel.modRegistry.registerModels(event);
 	}
 	
-	 @SideOnly(Side.CLIENT)
-	 @SubscribeEvent
-	 public static void onTextureStitch(TextureStitchEvent.Pre event) {
+	@SubscribeEvent
+	public static void onTextureStitch(TextureStitchEvent.Pre event) {
 
 		 	TextureStitchEvent.Pre textures =(TextureStitchEvent.Pre) event ;
 		 	ResourceLocation location;
@@ -56,20 +57,10 @@ public class ClientProxy extends ICommonProxy {
             textures.getMap().registerSprite(location);
             
             location=new ResourceLocation(LibMisc.MOD_ID,"blocks/funnel/jar_top");
-            textures.getMap().registerSprite(location);
-            
+            textures.getMap().registerSprite(location);            
 	 }
 	
-
-    @Override
-    public void preInit(FMLPreInitializationEvent event) {
-    	super.preInit(event);
-    	registerRenderers();
-    }
     
-
-
-
     @Override
     public String localize(String translationKey, Object... args) {
         return I18n.format(translationKey, args);

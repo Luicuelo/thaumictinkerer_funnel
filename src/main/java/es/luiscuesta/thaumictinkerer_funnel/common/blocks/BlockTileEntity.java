@@ -1,43 +1,111 @@
 package es.luiscuesta.thaumictinkerer_funnel.common.blocks;
 
+import java.util.List;
 import java.util.Random;
 
 import javax.annotation.Nullable;
 
-import es.luiscuesta.thaumictinkerer_funnel.common.tileentity.ITileEntityThaumicTinkerer;
+import es.luiscuesta.thaumictinkerer_funnel.Thaumictinkerer_funnel;
+import es.luiscuesta.thaumictinkerer_funnel.common.libs.LibMisc;
+import es.luiscuesta.thaumictinkerer_funnel.common.tileentity.IRedstoneTileEntity;
 import net.minecraft.block.Block;
-import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
-public abstract  class BlockTileEntity<T extends TileEntity> extends TTBlock {
+public abstract  class BlockTileEntity<T extends TileEntity> extends Block {
+	
+    private String baseName;
+    private ResourceLocation resourceLocation;
+    private boolean preserveTileEntity;
+    
+    
+   
+
+	//private static final Map<IRegistryDelegate<Block>, IStateMapper> customStateMappers = ReflectionHelper.getPrivateValue(ModelLoader.class, null, "customStateMappers");
+	//private static final DefaultStateMapper fallbackMapper = new DefaultStateMapper();
+    
+    public ResourceLocation getResourceLocation() {
+    	return resourceLocation;
+    }
+    
+    
+	public   String getUnlocalizedName() {
+		return resourceLocation.getResourceDomain() + "." + resourceLocation.getResourcePath();
+	}
+	
+	public   String getItemBlockName() {
+		return resourceLocation.getResourceDomain() + ":" + resourceLocation.getResourcePath();
+	}	
 	
 	
-	
+    public BlockTileEntity(String name, Material materialIn, final boolean preserveTileEntity) {
 
-    /**
-     * Should the {@link TileEntity} be preserved until after {@link #getDrops} has been called?
-     */
-    private final boolean preserveTileEntity;
-
-    public BlockTileEntity(String name, Material blockMaterialIn, MapColor blockMapColorIn, final boolean preserveTileEntity) {
-        super(name, blockMaterialIn, blockMapColorIn);
+        this(name, materialIn);
         this.setTickRandomly(false);
         this.preserveTileEntity = preserveTileEntity;
     }
-
-    public BlockTileEntity(String name, Material materialIn, final boolean preserveTileEntity) {
-        super(name, materialIn);
-
-        this.preserveTileEntity = preserveTileEntity;
+	
+    public BlockTileEntity(String name, Material blockMaterialIn) {
+  
+        super(blockMaterialIn, blockMaterialIn.getMaterialMapColor());
+        baseName = name;
+        //setBlockName(this, name);
+        setHardness(2);
+        if (isInCreativeTab())
+            setCreativeTab(Thaumictinkerer_funnel.getTab());
+        resourceLocation= new ResourceLocation(LibMisc.MOD_ID, name);
     }
+
+
+    
+	@SideOnly(Side.CLIENT)
+	public void registerModels(ModelRegistryEvent event) {
+		Item item=Item.getItemFromBlock(this);
+		if(item != Items.AIR)	{			
+			ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(this.getRegistryName(), "inventory"));			
+		}
+	}
+	
+	
+    protected boolean isInCreativeTab() {
+        return true;
+    }
+
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+        super.addInformation(stack, worldIn, tooltip, flagIn);
+        int i = 0;
+        String name = "item." + LibMisc.RESOURCE_PREFIX + baseName + "." + i;
+        while (I18n.hasKey(name)) {
+            tooltip.add(I18n.format(name));
+            i++;
+            name = "item." + LibMisc.RESOURCE_PREFIX + baseName + "." + i;
+        }
+
+    }
+	
+	//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	
+
 
     @Override
     public boolean hasTileEntity(final IBlockState state) {
@@ -51,13 +119,7 @@ public abstract  class BlockTileEntity<T extends TileEntity> extends TTBlock {
     @Override
     public abstract TileEntity createTileEntity(World world, IBlockState state);
 
-    /**
-     * Get the {@link TileEntity} at the specified position.
-     *
-     * @param world The World
-     * @param pos   The position
-     * @return The TileEntity
-     */
+
     @SuppressWarnings("unchecked")
     @Nullable
     protected T getTileEntity(final IBlockAccess world, final BlockPos pos) {
@@ -130,8 +192,8 @@ public abstract  class BlockTileEntity<T extends TileEntity> extends TTBlock {
     public void updateRedstone(World world, BlockPos pos) {
         if (!world.isRemote) {
             TileEntity tile = world.getTileEntity(pos);
-            if (tile instanceof ITileEntityThaumicTinkerer) {
-            	ITileEntityThaumicTinkerer base = (ITileEntityThaumicTinkerer) tile;
+            if (tile instanceof IRedstoneTileEntity) {
+            	IRedstoneTileEntity base = (IRedstoneTileEntity) tile;
       
                 boolean powered = isPowered (world,pos);
                 boolean wasPowered = base.getRedstonePowered();
@@ -157,8 +219,8 @@ public abstract  class BlockTileEntity<T extends TileEntity> extends TTBlock {
     @Override
     public boolean canConnectRedstone(IBlockState state, IBlockAccess world, BlockPos pos, @Nullable EnumFacing side) {
         TileEntity tile = world.getTileEntity(pos);
-        if (tile instanceof ITileEntityThaumicTinkerer) {
-        	ITileEntityThaumicTinkerer base = (ITileEntityThaumicTinkerer) tile;
+        if (tile instanceof IRedstoneTileEntity) {
+        	IRedstoneTileEntity base = (IRedstoneTileEntity) tile;
             return base.canRedstoneConnect();
         }
         return false;

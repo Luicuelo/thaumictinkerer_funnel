@@ -5,7 +5,6 @@ import javax.annotation.Nullable;
 
 import es.luiscuesta.thaumictinkerer_funnel.common.blocks.BlockFunnel;
 import es.luiscuesta.thaumictinkerer_funnel.common.config.TTConfig;
-import es.luiscuesta.thaumictinkerer_funnel.common.misc.SingleItemStackHandler;
 import net.minecraft.block.BlockHopper;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
@@ -67,10 +66,18 @@ public class TileEntityFunnel extends TileEntityJarFillable
 		}
 	}
 
-	private class MyItemStackHandler extends  SingleItemStackHandler{
+	private class MyItemStackHandler extends  ItemStackHandler{
+		
+
+
+	    @Override
+	    public int getSlotLimit(int slot) {
+	        return 1;
+	    }
+	
 		
 		public MyItemStackHandler() {
-			super();
+			super(1);
 		}
 		
 		@Override
@@ -216,7 +223,7 @@ public class TileEntityFunnel extends TileEntityJarFillable
 		if (!(jar.getItem() instanceof IEssentiaContainerItem)) return null;
 		IEssentiaContainerItem jarItem = (IEssentiaContainerItem) jar.getItem();		
 	
-		int capacity = ItemCapacityDictionary.getCapcityFromJar(jar);		
+		int capacity = JarCapacityDictionary.getCapcityFromJar(jar);		
 		if (jarItem.getAspects(jar) == null || jarItem.getAspects(jar).size() == 0)  {			
 			return new JarAspect(capacity, 0, BlockFunnel.getAspectFromTag(jar),jarItem);//if have filter returns filter
 		}

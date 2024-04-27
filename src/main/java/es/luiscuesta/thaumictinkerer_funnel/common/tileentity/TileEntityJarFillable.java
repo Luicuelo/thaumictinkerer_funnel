@@ -10,7 +10,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import thaumcraft.common.tiles.essentia.TileJarFillable;
 
-public abstract class TileEntityJarFillable extends TileJarFillable implements ITileEntityThaumicTinkerer {
+public abstract class TileEntityJarFillable extends TileJarFillable implements IRedstoneTileEntity {
 
     private boolean redstonePowered;
     

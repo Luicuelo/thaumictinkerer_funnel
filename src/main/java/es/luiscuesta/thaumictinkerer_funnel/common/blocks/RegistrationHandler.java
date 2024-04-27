@@ -14,24 +14,23 @@ import net.minecraftforge.registries.IForgeRegistry;
 
 public  class RegistrationHandler {
     
-    private ArrayList<TTBlock> blocks = new ArrayList<>();
-    private ArrayList<TTBlock> itemBlocks = new ArrayList<>();
+    private ArrayList<BlockTileEntity<?>> blocks = new ArrayList<>();
+    private ArrayList<BlockTileEntity<?>> itemBlocks = new ArrayList<>();
     
     
-	public void addBlockForRegistry(TTBlock block) {
+	public void addBlockForRegistry(BlockTileEntity<?> block) {
 		blocks.add(block);
 	}
-	public void addBlockItemForRegistry(TTBlock block) {
+	public void addBlockItemForRegistry(BlockTileEntity<?> block) {
 		itemBlocks.add(block);
 	}
     
     public  void registerBlocks(final RegistryEvent.Register<Block> event) {
         final IForgeRegistry<Block> registry = event.getRegistry();
-		for(int i = 0; i < blocks.size(); i++) {			
-			TTBlock b=(TTBlock) (blocks.get(i));					
-			((Block)b).setRegistryName(b.getResourceLocation());						
-			((Block)b).setUnlocalizedName(blocks.get(i).getUnlocalizedName());			
-			registry.register((Block) blocks.get(i));
+		for(BlockTileEntity<?> b:blocks) {		
+			b.setRegistryName(b.getResourceLocation());						
+			b.setUnlocalizedName(b.getUnlocalizedName());			
+			registry.register(b);
 		}
     }
 
@@ -50,7 +49,7 @@ public  class RegistrationHandler {
         */
         
 		for(int i = 0; i < itemBlocks.size(); i++) {			
-			ItemBlock itemBlock=new ItemBlock ((Block)(itemBlocks.get(i)));
+			ItemBlock itemBlock=new ItemBlock ((itemBlocks.get(i)));
 			ResourceLocation rl=new ResourceLocation (itemBlocks.get(i).getItemBlockName()) ;
 			itemBlock.setRegistryName(rl);
 			itemBlock.setUnlocalizedName(itemBlocks.get(i).getUnlocalizedName());					
@@ -58,7 +57,7 @@ public  class RegistrationHandler {
 		}
 
 		for(int i = 0; i < blocks.size(); i++) {
-			Block block =(Block) (blocks.get(i));
+			Block block =(blocks.get(i));
 			if (block instanceof BlockTileEntity) {
 				Class<? extends TileEntity> classTileEntity=((BlockTileEntity<?>)block).getClassTileEntity();
 				GameRegistry.registerTileEntity(classTileEntity, block.getRegistryName().toString());
@@ -70,7 +69,7 @@ public  class RegistrationHandler {
 
 	public void registerModels(ModelRegistryEvent  event) {		
 		for(int i = 0; i < itemBlocks.size(); i++) {
-			blocks.get(i).registerModels();
+			blocks.get(i).registerModels(event);
 		}
 
 		/*

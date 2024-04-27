@@ -204,22 +204,19 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
 			
 		TileEntityFunnel funnel = (TileEntityFunnel) te;
 		ItemStack stack = funnel.getInventory().getStackInSlot(0);
+		ItemStack playerStack = playerIn.getHeldItem(hand);
 		
 		if (stack == ItemStack.EMPTY) { //no jar
 			if (worldIn.isRemote) 	return true;
 			
-			if (hand == EnumHand.MAIN_HAND && playerIn.getHeldItemMainhand().isEmpty() && !playerIn.isSneaking()) {
-				boolean power = state.getValue(POWER);
-				IBlockState newState = this.getDefaultState().withProperty(POWER, !power);
-				worldIn.notifyBlockUpdate(pos, worldIn.getBlockState(pos),newState, 3);
-				worldIn.setBlockState(pos, newState, 2);			
-				worldIn.notifyNeighborsOfStateChange(pos, this, false);
-				((TileEntityFunnel) te).markDirty();
+			if ( playerIn.getHeldItemMainhand().isEmpty()) { //change POWER
+				if (worldIn.isRemote) return true;				
+				changePower(worldIn, pos, state);
+				funnel.markDirty();
 				return true;
 			}
 			
-			ItemStack playerStack = playerIn.getHeldItem(hand);
-			if (funnel.isItemValidForSlot(0, playerStack)) {
+			if (funnel.isItemValidForSlot(0, playerStack)) { //Put JAR
 				funnel.getInventory().insertItem(0, playerStack.copy(), false);
 				playerStack.setCount(playerStack.getCount() - 1);
 				if (playerStack.isEmpty()) {
@@ -228,15 +225,13 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
 				funnel.markDirty();
 				return true;
 			}
-			
-			
-			
-		} else {
+									
+		} else { //jar
 
-			ItemStack playerStack = playerIn.getHeldItemMainhand();
-			if (hand != EnumHand.MAIN_HAND || !playerStack.isEmpty()) {
+			if ( !playerStack.isEmpty()) {
 				Item playerItem = playerStack.getItem();
-				if (playerItem == ItemsTC.phial) {
+				
+				if (playerItem == ItemsTC.phial) {   //Phial
 					IEssentiaContainerItem phial = (IEssentiaContainerItem) playerItem;
 					AspectList phialAspectList = phial.getAspects(playerStack);
 					if (phialAspectList != null && phialAspectList.size() >= 0) {
@@ -245,35 +240,71 @@ public class BlockFunnel extends BlockTileEntity<TileEntityFunnel> {
 						funnel.fillPhial(worldIn, pos, playerIn, hand, phial);
 					}
 					return true;
-				} else
-					return true;
-			}
-			if (worldIn.isRemote)
-				return true;
-			ItemStack jar = stack.copy();
-			IEssentiaContainerItem item = (IEssentiaContainerItem) stack.getItem();
-			if (item.getAspects(jar) == null || item.getAspects(jar).getAspects().length == 0) {
-				Aspect aspectFromTag = getAspectFromTag(jar);
-				NBTTagCompound itemTags = null;
-				if (aspectFromTag != null) {
-					itemTags = new NBTTagCompound();
-					itemTags.setString("AspectFilter", aspectFromTag.getTag());
-				}
-				jar.setTagCompound(itemTags);
-			}
-			if (!playerIn.inventory.addItemStackToInventory(jar)) {
-				playerIn.dropItem(jar, false);
+				} else {  //Switch Jar
 
+					if (playerStack.getCount()==1&& funnel.isItemValidForSlot(0, playerStack)) {
+						
+						ItemStack jar = stack.copy();
+						
+						funnel.getInventory().setStackInSlot(0, playerStack);			
+						clearTagsFromEmptyJar(jar);			
+						playerIn.setHeldItem(hand, jar);
+						funnel.markDirty();
+						return true;						
+						
+					}	else return false;									
+				}					
 			}
-			funnel.getInventory().setStackInSlot(0, ItemStack.EMPTY);
+			
+			//playerStack.isEmpty()
+			
+			if (!playerIn.isSneaking()) {
+				if (worldIn.isRemote) return true;
+				
+				ItemStack jar = stack.copy();
+				clearTagsFromEmptyJar(jar);			
+				if (!playerIn.inventory.addItemStackToInventory(jar)) {
+					playerIn.dropItem(jar, false);
+	
+				}
+				funnel.getInventory().setStackInSlot(0, ItemStack.EMPTY);
+			}else{ //Change POWER
+				if (worldIn.isRemote) return true;				
+				changePower(worldIn, pos, state);				
+			}
 			funnel.markDirty();
-			return true;
-		}
-		
+			return true;			
+		}		
 		return false;
 
 	}
 
+    private void changePower(World worldIn, BlockPos pos, IBlockState state) {
+    
+		boolean power = state.getValue(POWER);
+		IBlockState newState = this.getDefaultState().withProperty(POWER, !power);
+		worldIn.notifyBlockUpdate(pos, worldIn.getBlockState(pos),newState, 3);
+		worldIn.setBlockState(pos, newState, 2);			
+		worldIn.notifyNeighborsOfStateChange(pos, this, false);
+    }
+    
+    
+    
+    private ItemStack clearTagsFromEmptyJar(ItemStack jar) {
+		IEssentiaContainerItem item = (IEssentiaContainerItem) jar.getItem();
+		if (item.getAspects(jar) == null || item.getAspects(jar).getAspects().length == 0) {
+			Aspect aspectFromTag = getAspectFromTag(jar);
+			NBTTagCompound itemTags = null;
+			if (aspectFromTag != null) {
+				itemTags = new NBTTagCompound();
+				itemTags.setString("AspectFilter", aspectFromTag.getTag());
+			}
+			jar.setTagCompound(itemTags);
+		}
+		return jar;
+    	
+    }
+    
     @Override
     public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
         TileEntityFunnel funnel = (TileEntityFunnel) worldIn.getTileEntity(pos);

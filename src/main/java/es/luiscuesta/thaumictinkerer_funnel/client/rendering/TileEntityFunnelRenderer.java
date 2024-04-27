@@ -106,7 +106,7 @@ public class TileEntityFunnelRenderer extends TileEntitySpecialRenderer<TileEnti
     			if (amount>0)
     				drawModel(te, x, y, z, blockPos, blockState,block,"block/jar_normal");
     			else
-    				drawItem(x, y, z,jar);
+    				drawItem(x, y-0.015, z,jar);
 	  		}
 	  		else {
 	  			drawItem(x, y, z,jar);
