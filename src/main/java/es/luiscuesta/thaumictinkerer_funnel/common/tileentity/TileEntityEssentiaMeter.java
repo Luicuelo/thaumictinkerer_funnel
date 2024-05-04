@@ -96,6 +96,8 @@ public class TileEntityEssentiaMeter extends TileEntityBase implements ITickable
 		return 0;
 	}
 	
+	
+	//-----------------------------------------------------------------------------
 	@Override
 	public void writeExtraNBT(NBTTagCompound nbt) {
 		super.writeExtraNBT(nbt);//redstone
@@ -117,6 +119,7 @@ public class TileEntityEssentiaMeter extends TileEntityBase implements ITickable
 		_hopperPosition=EnumFacing.getFront(nbt.getInteger("hopperposition"));
 	}
 	
+	//-----------------------------------------------------------------------------
 
 	private TileEntityHopper getHopper(EnumFacing dirHopper) {	
 		if (dirHopper==null)return null;

@@ -3,9 +3,11 @@ package es.luiscuesta.thaumictinkerer_funnel.proxy;
 import es.luiscuesta.thaumictinkerer_funnel.Thaumictinkerer_funnel;
 import es.luiscuesta.thaumictinkerer_funnel.common.blocks.BlockTileEntity;
 import es.luiscuesta.thaumictinkerer_funnel.common.blocks.ModBlocks;
+import es.luiscuesta.thaumictinkerer_funnel.common.recipes.ModRecipes;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -41,6 +43,12 @@ public abstract class ICommonProxy{
 	public static void registerItems(RegistryEvent.Register<Item> event) {
 		Thaumictinkerer_funnel.modRegistry.registerItems(event);
 	}
+	
+    @SubscribeEvent
+    public static void registerVanillaRecipes(RegistryEvent.Register<IRecipe> event) {
+        ModRecipes.initializeRecipes(event.getRegistry());
+    }
+	
 	
 	@SuppressWarnings("deprecation")
 	@SubscribeEvent

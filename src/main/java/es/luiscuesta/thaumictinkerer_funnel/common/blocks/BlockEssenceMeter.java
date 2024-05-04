@@ -371,9 +371,13 @@ public class BlockEssenceMeter extends BlockTileEntity<TileEntityFunnel> {
     @Override
     public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
 
+    	World worldIn=(World)world;
+    	if(worldIn.isRemote) return;    	
     	super.getDrops(drops, world, pos, state, fortune);
-    	ItemStack drop =drops.get(0);
-    
+    	
+    	if (drops==null)return;
+    	if (drops.size()<1)return;    	
+    	ItemStack drop =drops.get(0);    
     	
     	TileEntity tile = world.getTileEntity(pos);	    	    	
     	if (tile!=null && tile instanceof TileEntityEssentiaMeter) {

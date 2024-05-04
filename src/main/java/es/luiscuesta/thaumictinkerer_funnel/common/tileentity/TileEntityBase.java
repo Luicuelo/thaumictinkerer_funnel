@@ -28,7 +28,8 @@ public abstract class TileEntityBase extends TileEntity {
     public TileEntityBase() {
     	super();
     }
-    
+  
+    //-------------------------------------------------------------
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         writeExtraNBT(compound);
@@ -52,12 +53,30 @@ public abstract class TileEntityBase extends TileEntity {
         else
             redstonePowered = false;
     }
+    //-------------------------------------------------------------
+    
+    
+    //envia
+    @Nullable
+    @Override
+    public SPacketUpdateTileEntity getUpdatePacket() {
+        return new SPacketUpdateTileEntity(this.pos, 5, this.getUpdateTag());
+    }
 
+    
     @Override
     public NBTTagCompound getUpdateTag() {
         NBTTagCompound cmp = super.getUpdateTag();
         writeExtraNBT(cmp);
         return cmp;
+    }
+
+    //recibe
+    @Override
+    public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt) {
+        super.onDataPacket(net, pkt);
+        handleUpdateTag(pkt.getNbtCompound());
+        sendUpdates();
     }
 
     @Override
@@ -66,18 +85,7 @@ public abstract class TileEntityBase extends TileEntity {
         readExtraNBT(tag);
     }
 
-    @Override
-    public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity pkt) {
-        super.onDataPacket(net, pkt);
-        handleUpdateTag(pkt.getNbtCompound());
-        sendUpdates();
-    }
 
-    @Nullable
-    @Override
-    public SPacketUpdateTileEntity getUpdatePacket() {
-        return new SPacketUpdateTileEntity(this.pos, 5, this.getUpdateTag());
-    }
 
     public abstract boolean respondsToPulses();
 
