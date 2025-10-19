@@ -44,6 +44,10 @@ public class ModRecipes {
 
     private static void initializeCraftingRecipes(IForgeRegistry<IRecipe> registry) {
 
+    	
+    	registry.register(new RecipeCombineEssentia()
+    	        .setRegistryName(new ResourceLocation("thaumictinkerer_funnel", "combine_essentia")));
+    	
     	/*
     	if (Loader.isModLoaded("thaumictinkerer")) {
     		
